@@ -1,9 +1,6 @@
 import org.scalatest._
 import com.nathanielmay.quarto.quarto.{Piece, Quarto, SquareDoesNotExistError, BadTurnError}
-import com.nathanielmay.quarto.java.Attribute.Color
-import com.nathanielmay.quarto.java.Attribute.Size
-import com.nathanielmay.quarto.java.Attribute.Shape
-import com.nathanielmay.quarto.java.Attribute.Top
+import com.nathanielmay.quarto.java.{Color, Size, Shape, Top}
 
 class QuartoTest extends FlatSpec with Matchers {
 
@@ -53,8 +50,29 @@ class QuartoTest extends FlatSpec with Matchers {
     }
   }
 
+  it should "be equal to a game from saved state" in {
+    val q1 = new Quarto("test")
+      .takeTurn(WLQF, (1, 2), BLQF)
+      .takeTurn(BLQF, (2, 2), BSRH)
+
+    val squares = Map((1, 2) -> new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT),
+      (2, 2) -> new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
+    )
+
+    val q2 = new Quarto("test",
+      squares,
+      Some(new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE))
+    )
+
+    assert(q1 == q2)
+  }
+
   "A Piece" should "be equal to a piece with the same attributes" in {
     assert(WLQF == new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))
+  }
+
+  it should "not be equal to a piece with different attributes" in {
+    assert(WLQF != new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT))
   }
 
   //piece declarations
