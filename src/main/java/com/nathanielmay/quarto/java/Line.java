@@ -1,7 +1,7 @@
 package com.nathanielmay.quarto.java;
 
 public enum Line {
-    H1, H2, H3, H4,
-    V1, V2, V3, V4,
-    D1, D2
+    H0, H1, H2, H3,
+    V0, V1, V2, V3,
+    D0, D1
 }
