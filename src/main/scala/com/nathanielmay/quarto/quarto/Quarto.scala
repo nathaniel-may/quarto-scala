@@ -11,7 +11,7 @@ final class Quarto(boardId:String,
                    pieces:Map[Piece, Boolean] = Map(),
                    lines:Map[(Line, IAttribute), Int] = Map()){
 
-  def takeTurn(toPlace:Piece, square:(Int, Int), active:Piece): Quarto = {
+  def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Quarto = {
 
     square match {
       case (h:Int, v:Int) =>
@@ -20,8 +20,9 @@ final class Quarto(boardId:String,
         }
     }
 
-    if(toPlace == active) {
-      throw new BadTurnError
+    match active {
+      case active:Piece => if(toPlace == active) { throw new BadTurnError }
+      case _ =>
     }
 
     if(pieces.getOrElse(active, "unused active") != "unused active") {
@@ -39,11 +40,13 @@ final class Quarto(boardId:String,
       Quarto.updateLines(lines, square, toPlace))
   }
 
+  def isWon(): Boolean = 4 <= this.lines.foldLeft(0)(_ max _._2)
+
   override def toString(): String = squares.toString()
 
   override def equals(that: Any): Boolean =
     that match {
-      case that: Quarto => this.hashCode == that.hashCode
+      case that:Quarto => this.hashCode == that.hashCode
       case _ => false
     }
 
@@ -54,12 +57,6 @@ final class Quarto(boardId:String,
 object Quarto {
 
   final def isValid(game:Quarto): Boolean = {
-
-    //TODO STUB
-    false
-  }
-
-  def isWon(game:Quarto): Boolean = {
 
     //TODO STUB
     false
