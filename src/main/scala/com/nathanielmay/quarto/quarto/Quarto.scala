@@ -13,36 +13,31 @@ final class Quarto(boardId:String,
 
   def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Quarto = {
 
-    square match {
-      case (h:Int, v:Int) =>
-        if(h < 0 || h > 3 || v < 0 || v > 3){
-          throw new SquareDoesNotExistError
-        }
-    }
-
-    match active {
-      case active:Piece => if(toPlace == active) { throw new BadTurnError }
-      case _ =>
-    }
-
-    if(pieces.getOrElse(active, "unused active") != "unused active") {
-      throw new BadTurnError
-    }
-
-    if(squares.getOrElse(square, "square occupied") != "square occupied") {
-      throw new BadTurnError
-    }
+    if(!Quarto.validSquare(square)) throw new SquareDoesNotExistError
+    if(Quarto.samePiece(toPlace, active)) throw new BadTurnError
+    if(activeIsPlaced(active)) throw new BadTurnError
+    if(squares.getOrElse(square, "not occupied") != "not occupied") throw new BadTurnError
 
     new Quarto(boardId,
       squares + (square -> toPlace),
-      Some(active),
+      active,
       pieces + (toPlace -> true),
       Quarto.updateLines(lines, square, toPlace))
   }
 
-  def isWon(): Boolean = 4 <= this.lines.foldLeft(0)(_ max _._2)
+  protected def activeIsPlaced(active:Option[Piece]): Boolean ={
+    active match {
+      case Some(p) => pieces.get(p) match {
+        case Some(b) => b
+        case _ => false
+      }
+      case _ => false
+    }
+  }
 
-  override def toString(): String = squares.toString()
+  def isWon: Boolean = 4 <= this.lines.foldLeft(0)(_ max _._2)
+
+  override def toString: String = squares.toString()
 
   override def equals(that: Any): Boolean =
     that match {
@@ -50,7 +45,7 @@ final class Quarto(boardId:String,
       case _ => false
     }
 
-  override def hashCode(): Int = toString().hashCode()
+  override def hashCode: Int = toString().hashCode()
 
 }
 
@@ -60,6 +55,20 @@ object Quarto {
 
     //TODO STUB
     false
+  }
+
+  protected def samePiece(a:Piece, b:Option[Piece]): Boolean = {
+    b match {
+      case Some(p) => a == p
+      case _ => false
+    }
+  }
+
+  protected def validSquare(square:(Int, Int)): Boolean = {
+    square match {
+      case (h:Int, v:Int) =>
+        if(h < 0 || h > 3 || v < 0 || v > 3) false else true
+    }
   }
 
   protected def piecesFromSquares(squares:Map[(Int, Int), Piece]): Map[Piece, Boolean] = {
@@ -142,7 +151,7 @@ final class Piece(val color: Color, val size: Size, val shape: Shape, val top: T
       case Top.HOLE => "H"
     }
 
-  override def toString(): String = colorChar + sizeChar + shapeChar + topChar
+  override def toString: String = colorChar + sizeChar + shapeChar + topChar
 
   override def equals(that: Any): Boolean =
     that match {
@@ -150,7 +159,7 @@ final class Piece(val color: Color, val size: Size, val shape: Shape, val top: T
       case _ => false
     }
 
-  override def hashCode(): Int = toString().hashCode()
+  override def hashCode: Int = toString().hashCode()
 
 
 }
