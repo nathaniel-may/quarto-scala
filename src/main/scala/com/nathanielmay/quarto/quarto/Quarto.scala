@@ -1,8 +1,11 @@
 package com.nathanielmay.quarto.quarto
 
-import com.nathanielmay.quarto.java.{IAttribute, Color, Shape, Size, Top, Line}
+import com.nathanielmay.quarto.java.{Color, IAttribute, Line, Shape, Size, Top}
+import scala.util.{Try,Success,Failure}
 import scalaz._
 import Scalaz._
+
+import scala.util.Try
 
 
 final class Quarto(boardId:String,
@@ -11,18 +14,46 @@ final class Quarto(boardId:String,
                    pieces:Map[Piece, Boolean] = Map(),
                    lines:Map[(Line, IAttribute), Int] = Map()){
 
+  validate()
+
+  private def validate() {
+
+    val validSquares = squares.foldLeft(true)((r:Boolean, c:((Int,Int), Piece)) =>
+      if(r)  Quarto.isValidSquare(c._1) && squares.values.count(_ == c._2) == 1 else false
+    )
+
+    if(!validSquares)throw new InvalidBoardError
+
+    active match {
+      case Some(p) => if(squares.exists(_._2 == p)) throw new InvalidBoardError
+      case _ => if(squares.nonEmpty && !isWon) throw new InvalidBoardError
+    }
+
+  }
+
   def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Quarto = {
 
-    if(!Quarto.validSquare(square)) throw new SquareDoesNotExistError
-    if(Quarto.samePiece(toPlace, active)) throw new BadTurnError
-    if(activeIsPlaced(active)) throw new BadTurnError
+    if(!Quarto.isValidSquare(square)) throw new SquareDoesNotExistError
     if(squares.getOrElse(square, "not occupied") != "not occupied") throw new BadTurnError
 
-    new Quarto(boardId,
+    val winningMove = willWin(toPlace, square)
+
+    if(Quarto.samePiece(toPlace, active) && !winningMove) throw new BadTurnError
+    if(activeIsPlaced(active) && !winningMove) throw new BadTurnError
+
+    var newActive = active
+    if(winningMove) newActive = None
+
+    Try(new Quarto(boardId,
       squares + (square -> toPlace),
-      active,
+      newActive,
       pieces + (toPlace -> true),
-      Quarto.updateLines(lines, square, toPlace))
+      Quarto.updateLines(lines, square, toPlace))) match {
+      case Success(game) => game
+      case Failure(_) => throw new BadTurnError
+    }
+
+
   }
 
   protected def activeIsPlaced(active:Option[Piece]): Boolean ={
@@ -35,7 +66,14 @@ final class Quarto(boardId:String,
     }
   }
 
-  def isWon: Boolean = 4 <= this.lines.foldLeft(0)(_ max _._2)
+  def willWin(toPlace:Piece, square:(Int, Int)): Boolean = {
+    val newLines = lines |+| Quarto.linesFromSquare(square, toPlace)
+    Quarto.winningLines(newLines)
+  }
+
+  def isWon: Boolean = Quarto.winningLines(this.lines)
+
+  def getActive: Option[Piece] = active
 
   override def toString: String = squares.toString()
 
@@ -51,11 +89,8 @@ final class Quarto(boardId:String,
 
 object Quarto {
 
-  final def isValid(game:Quarto): Boolean = {
-
-    //TODO STUB
-    false
-  }
+  private def winningLines(lines:Map[(Line, IAttribute), Int]): Boolean =
+    4 <= lines.foldLeft(0)(_ max _._2)
 
   protected def samePiece(a:Piece, b:Option[Piece]): Boolean = {
     b match {
@@ -64,7 +99,7 @@ object Quarto {
     }
   }
 
-  protected def validSquare(square:(Int, Int)): Boolean = {
+  protected def isValidSquare(square:(Int, Int)): Boolean = {
     square match {
       case (h:Int, v:Int) =>
         if(h < 0 || h > 3 || v < 0 || v > 3) false else true
@@ -110,7 +145,7 @@ object Quarto {
     if(square._1 == 0 && square._2 == 3){ lines = lines |+| linePairs(Line.D1, piece) }
     if(square._1 == 1 && square._2 == 2){ lines = lines |+| linePairs(Line.D1, piece) }
     if(square._1 == 2 && square._2 == 1){ lines = lines |+| linePairs(Line.D1, piece) }
-    if(square._1 == 4 && square._2 == 0){ lines = lines |+| linePairs(Line.D1, piece) }
+    if(square._1 == 3 && square._2 == 0){ lines = lines |+| linePairs(Line.D1, piece) }
 
     lines
 
@@ -169,3 +204,5 @@ class QuartoError extends Exception {}
 class SquareDoesNotExistError extends QuartoError {}
 
 class BadTurnError extends QuartoError {}
+
+class InvalidBoardError extends QuartoError {}

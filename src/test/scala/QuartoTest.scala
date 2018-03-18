@@ -1,5 +1,5 @@
 import org.scalatest._
-import com.nathanielmay.quarto.quarto.{Piece, Quarto, SquareDoesNotExistError, BadTurnError}
+import com.nathanielmay.quarto.quarto.{Piece, Quarto, SquareDoesNotExistError, BadTurnError, InvalidBoardError}
 import com.nathanielmay.quarto.java.{Color, Size, Shape, Top}
 
 class QuartoTest extends FlatSpec with Matchers {
@@ -25,14 +25,14 @@ class QuartoTest extends FlatSpec with Matchers {
 
   }
 
-  it should "reject when active and toPlace are the same" in {
+  it should "reject turn when active and toPlace are the same" in {
     a [BadTurnError] should be thrownBy {
       new Quarto("test")
         .takeTurn(WLQF, (0, 0), Some(WLQF))
     }
   }
 
-  it should "reject when active piece is already placed" in {
+  it should "reject turn when active piece is already placed" in {
     val q = new Quarto("test")
       .takeTurn(WLQF, (0, 0), Some(BLQF))
 
@@ -41,12 +41,55 @@ class QuartoTest extends FlatSpec with Matchers {
     }
   }
 
-  it should "reject when square is occupied" in {
+  it should "reject turn when square is occupied" in {
     val q = new Quarto("test")
       .takeTurn(WLQF, (0, 0), Some(BLQF))
 
     a [BadTurnError] should be thrownBy {
       q.takeTurn(BLQF, (0, 0), Some(BSRH))
+    }
+  }
+
+  it should "accept active piece for winning move" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), Some(BSRH))
+
+    assert(q.isWon)
+  }
+
+  it should "accept active piece of None for winning move" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), None)
+
+    assert(q.isWon)
+  }
+
+  it should "accept invalid active piece for winning move but not save it" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), Some(WLQF))
+
+    assert(q.isWon)
+    assert(q.getActive.isEmpty)
+  }
+
+  it should "reject when game is already won" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), None)
+
+    a [BadTurnError] should be thrownBy {
+      q.takeTurn(BSRH, (0, 0), Some(WSQF))
     }
   }
 
@@ -67,28 +110,115 @@ class QuartoTest extends FlatSpec with Matchers {
     assert(q1 == q2)
   }
 
+  it should "reject board creation with piece on the board twice" in {
+
+    val squares = Map((1, 2) -> WLQF, (2, 2) -> WLQF)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares, Some(BSRH))
+    }
+
+  }
+
+  it should "reject board creation with active that is already placed" in {
+
+    val squares = Map((1, 2) -> WLQF, (2, 2) -> BSRH)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares, Some(WLQF))
+    }
+
+  }
+
+  it should "reject board creation with out active if board is not new" in {
+
+    val squares = Map((1, 2) -> WLQF)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares, None)
+    }
+
+  }
+
+  it should "not reject board creation with out active if board is won" in {
+
+    val squares = Map((0, 0) -> WLQF, (0, 1) -> BLQF, (0, 2) -> BLRH, (0, 3) -> WLQH)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares, None)
+    }
+
+  }
+
+  it should "reject board creation with pieces placed off the board" in {
+
+    val squares1 = Map((4, 2) -> WLQF, (0, 0) -> BSRH)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares1, Some(WLQH))
+    }
+
+    val squares2 = Map((-1, 2) -> WLQF, (0, 0) -> BSRH)
+
+    a [InvalidBoardError] should be thrownBy {
+      new Quarto("test", squares2, Some(WLQH))
+    }
+
+  }
+
   it should "recognize a horizontal win" in {
-    val q1 = new Quarto("test")
-//      .takeTurn(WLQF, (0, 0), Some(BLQF))
-//      .takeTurn(BLQF, (0, 1), Some(BLRH))
-//      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQF, (0, 3), None)
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), None)
+
+    assert(q.isWon)
   }
 
   it should "recognize a vertical win" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 2), Some(BLQF))
+      .takeTurn(BLQF, (1, 2), Some(BLRH))
+      .takeTurn(BLRH, (2, 2), Some(WLQH))
+      .takeTurn(WLQH, (3, 2), None)
 
+    assert(q.isWon)
   }
 
   it should "recognize a diagonal0 win" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (1, 1), Some(BLRH))
+      .takeTurn(BLRH, (2, 2), Some(WLQH))
+      .takeTurn(WLQH, (3, 3), None)
 
+    assert(q.isWon)
   }
 
-  it should "recognize a diagonal win" in {
+  it should "recognize a diagonal1 win" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (3, 0), Some(BLQF))
+      .takeTurn(BLQF, (2, 1), Some(BLRH))
+      .takeTurn(BLRH, (1, 2), Some(WLQH))
+      .takeTurn(WLQH, (0, 3), None)
 
+    assert(q.isWon)
   }
 
   it should "recognize a multi-line win" in {
+    val q = new Quarto("test")
+      .takeTurn(WLQF, (0, 0), Some(BLQF))
+      .takeTurn(BLQF, (0, 1), Some(BLRH))
+      .takeTurn(BLRH, (0, 2), Some(BSRH))
 
+      .takeTurn(BSRH, (1, 3), Some(BSRF))
+      .takeTurn(BSRF, (2, 3), Some(BLQH))
+      .takeTurn(BLQH, (3, 3), Some(BLRF))
+
+      .takeTurn(BLRF, (0, 3), None)
+
+    assert(q.isWon)
   }
 
   "A Piece" should "be equal to a piece with the same attributes" in {
@@ -101,9 +231,20 @@ class QuartoTest extends FlatSpec with Matchers {
 
   //piece declarations
   val WLQF = new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT)
+  val WLQH = new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.HOLE)
+  val WLRF = new Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.FLAT)
+  val WLRH = new Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.HOLE)
+  val WSQF = new Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.FLAT)
+  val WSQH = new Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.HOLE)
+  val WSRF = new Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.FLAT)
+  val WSRH = new Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.HOLE)
   val BLQF = new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
-  val BSRH = new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE)
+  val BLQH = new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.HOLE)
+  val BLRF = new Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.FLAT)
   val BLRH = new Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.HOLE)
-    val WLQH = new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.HOLE)
+  val BSQF = new Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.FLAT)
+  val BSQH = new Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.HOLE)
+  val BSRF = new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.FLAT)
+  val BSRH = new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE)
 
 }
