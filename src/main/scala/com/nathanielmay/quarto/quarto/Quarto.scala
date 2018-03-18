@@ -5,8 +5,6 @@ import scala.util.{Try,Success,Failure}
 import scalaz._
 import Scalaz._
 
-import scala.util.Try
-
 
 final class Quarto(boardId:String,
                    squares:Map[(Int, Int), Piece] = Map(),
@@ -113,15 +111,13 @@ object Quarto {
   }
 
   protected def linesFromSquares(squares:Map[(Int, Int), Piece]): Map[(Line, IAttribute), Int] = {
-    var lines = Map[(Line, IAttribute), Int]()
-    squares.map {
-      keyValue:((Int,Int), Piece) => keyValue match {
-        case (square, piece) =>
-          lines = updateLines(lines, square, piece)
-      }
-    }
 
-    lines
+    squares.foldLeft(Map[(Line, IAttribute), Int]())(
+      (lines, c) => c match {
+        case (square, piece) => updateLines(lines, square, piece)
+      }
+    )
+
   }
 
   protected def updateLines(lines:Map[(Line, IAttribute), Int], square:(Int, Int), piece:Piece): Map[(Line, IAttribute), Int] = {
