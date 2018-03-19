@@ -1,7 +1,7 @@
 import org.scalatest._
+import org.scalatest.TryValues._
 import com.nathanielmay.quarto.quarto.{Quarto, _}
 import com.nathanielmay.quarto.java.{Color, Shape, Size, Top}
-
 import scala.util.{Failure, Success}
 
 object QuartoTest {
@@ -16,107 +16,85 @@ object QuartoTest {
 }
 
 class QuartoTest extends FlatSpec with Matchers {
-/**
+
   "A Quarto Game" should "not place a piece off the board" in {
-    val q = new Quarto("test")
-
-    a [SquareDoesNotExistError] should be thrownBy {
-      q.takeTurn(WLQF, (-1,0), Some(BLQF))
-    }
-
-    a [SquareDoesNotExistError] should be thrownBy {
-      q.takeTurn(WLQF, (0, -1), Some(BLQF))
-    }
-
-    a [SquareDoesNotExistError] should be thrownBy {
-      q.takeTurn(WLQF, (4,0), Some(BLQF))
-    }
-
-    a [SquareDoesNotExistError] should be thrownBy {
-      q.takeTurn(WLQF, (0, 4), Some(BLQF))
-    }
-
+    val q = Quarto.emptyBoard
+    q.takeTurn(WLQF, (-1,0), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
+    q.takeTurn(WLQF, (0, -1), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
+    q.takeTurn(WLQF, (4,0), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
+    q.takeTurn(WLQF, (0, 4), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
   }
 
   it should "reject turn when active and toPlace are the same" in {
-    a [BadTurnError] should be thrownBy {
-      new Quarto("test")
-        .takeTurn(WLQF, (0, 0), Some(WLQF))
-    }
+    Quarto.emptyBoard.takeTurn(WLQF, (0, 0), Some(WLQF)).failure.exception shouldBe a [BadTurnError]
   }
 
   it should "reject turn when active piece is already placed" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-
-    a [BadTurnError] should be thrownBy {
-      q.takeTurn(BLQF, (1, 0), Some(WLQF))
-    }
+    Quarto.takeTurns(Quarto.emptyBoard)(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (1, 0), Some(WLQF))
+    )).failure.exception shouldBe a [BadTurnError]
   }
 
   it should "reject turn when square is occupied" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-
-    a [BadTurnError] should be thrownBy {
-      q.takeTurn(BLQF, (0, 0), Some(BSRH))
-    }
+    Quarto.takeTurns(Quarto.emptyBoard)(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 0), Some(BSRH))
+    )).failure.exception shouldBe a [BadTurnError]
   }
 
   it should "accept active piece for winning move" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), Some(BSRH))
-
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(WLQH)),
+      (WLQH, (0, 3), Some(BSRH)))
+    )
   }
 
   it should "accept active piece of None for winning move" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), None)
-
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(WLQH)),
+      (WLQH, (0, 3), None))
+    )
   }
 
+  //TODO does the success case work
   it should "accept invalid active piece for winning move but not save it" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), Some(WLQF))
-
-    assert(q.isWon)
-    assert(q.getActive.isEmpty)
-  }
-
-  it should "reject when game is already won" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), None)
-
-    a [BadTurnError] should be thrownBy {
-      q.takeTurn(BSRH, (0, 0), Some(WSQF))
+    Quarto.takeTurns(Quarto.emptyBoard)(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(WLQH)),
+      (WLQH, (0, 3), Some(WLQF)))
+    ) should matchPattern {
+      case Success(game: Quarto) if game.isWon && game.active.isEmpty =>
     }
   }
 
+  it should "reject when game is already won" in {
+    Quarto.takeTurns(Quarto.emptyBoard)(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(WLQH)),
+      (WLQH, (0, 3), None),
+      (BSRH, (0, 0), Some(WSQF)))
+    ).failure.exception shouldBe a [BadTurnError]
+
+  }
+
   it should "be equal to a game from saved state" in {
-    val q1 = new Quarto("test")
-      .takeTurn(WLQF, (1, 2), Some(BLQF))
-      .takeTurn(BLQF, (2, 2), Some(BSRH))
+    val q1 = Quarto.takeTurns(Quarto.emptyBoard)(List(
+      (WLQF, (1, 2), Some(BLQF)),
+      (BLQF, (2, 2), Some(BSRH)))
+    )
 
     val squares = Map((1, 2) -> new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT),
       (2, 2) -> new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
     )
 
-    val q2 = new Quarto("test",
-      squares,
+    val q2 = Quarto.board(squares,
       Some(new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE))
     )
 
@@ -124,119 +102,83 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "reject board creation with piece on the board twice" in {
-
     val squares = Map((1, 2) -> WLQF, (2, 2) -> WLQF)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares, Some(BSRH))
-    }
-
+    Quarto.board(squares, Some(BSRH)).failure.exception shouldBe an [InvalidBoardError]
   }
 
   it should "reject board creation with active that is already placed" in {
-
     val squares = Map((1, 2) -> WLQF, (2, 2) -> BSRH)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares, Some(WLQF))
-    }
-
+    Quarto.board(squares, Some(WLQF)).failure.exception shouldBe an [InvalidBoardError]
   }
 
   it should "reject board creation with out active if board is not new" in {
-
     val squares = Map((1, 2) -> WLQF)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares, None)
-    }
-
+    Quarto.board(squares, None).failure.exception shouldBe an [InvalidBoardError]
   }
 
   it should "not reject board creation with out active if board is won" in {
-
     val squares = Map((0, 0) -> WLQF, (0, 1) -> BLQF, (0, 2) -> BLRH, (0, 3) -> WLQH)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares, None)
-    }
-
+    Quarto.board(squares, None).failure.exception shouldBe an [InvalidBoardError]
   }
 
   it should "reject board creation with pieces placed off the board" in {
-
     val squares1 = Map((4, 2) -> WLQF, (0, 0) -> BSRH)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares1, Some(WLQH))
-    }
+    Quarto.board(squares1, Some(WLQH)).failure.exception shouldBe an [InvalidBoardError]
 
     val squares2 = Map((-1, 2) -> WLQF, (0, 0) -> BSRH)
-
-    a [InvalidBoardError] should be thrownBy {
-      new Quarto("test", squares2, Some(WLQH))
-    }
-
+    Quarto.board(squares2, Some(WLQH)).failure.exception shouldBe an [InvalidBoardError]
   }
 
   it should "recognize a horizontal win" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), None)
-
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(WLQH)),
+      (WLQH, (0, 3), None))
+    )
   }
-*/
+
 
   "a quarto" should "recognize a vertical win" in {
-
     QuartoTest.assertWin(List(
       (WLQF, (0,2), Some(BLQF)),
       (BLQF, (1,2), Some(BLRH)),
       (BLRH, (2,2), Some(WLQH)),
       (WLQH, (3,2), None)
     ))
-
   }
 
-  /*
   it should "recognize a diagonal0 win" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (1, 1), Some(BLRH))
-      .takeTurn(BLRH, (2, 2), Some(WLQH))
-      .takeTurn(WLQH, (3, 3), None)
-
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (1, 1), Some(BLRH)),
+      (BLRH, (2, 2), Some(WLQH)),
+      (WLQH, (3, 3), None))
+    )
   }
 
   it should "recognize a diagonal1 win" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (3, 0), Some(BLQF))
-      .takeTurn(BLQF, (2, 1), Some(BLRH))
-      .takeTurn(BLRH, (1, 2), Some(WLQH))
-      .takeTurn(WLQH, (0, 3), None)
-
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (3, 0), Some(BLQF)),
+      (BLQF, (2, 1), Some(BLRH)),
+      (BLRH, (1, 2), Some(WLQH)),
+      (WLQH, (0, 3), None))
+    )
   }
 
   it should "recognize a multi-line win" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 0), Some(BLQF))
-      .takeTurn(BLQF, (0, 1), Some(BLRH))
-      .takeTurn(BLRH, (0, 2), Some(BSRH))
+    QuartoTest.assertWin(List(
+      (WLQF, (0, 0), Some(BLQF)),
+      (BLQF, (0, 1), Some(BLRH)),
+      (BLRH, (0, 2), Some(BSRH)),
 
-      .takeTurn(BSRH, (1, 3), Some(BSRF))
-      .takeTurn(BSRF, (2, 3), Some(BLQH))
-      .takeTurn(BLQH, (3, 3), Some(BLRF))
+      (BSRH, (1, 3), Some(BSRF)),
+      (BSRF, (2, 3), Some(BLQH)),
+      (BLQH, (3, 3), Some(BLRF)),
 
-      .takeTurn(BLRF, (0, 3), None)
-
-    assert(q.isWon)
+      (BLRF, (0, 3), None))
+    )
   }
-  */
 
   "A Piece" should "be equal to a piece with the same attributes" in {
     assert(WLQF == new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))

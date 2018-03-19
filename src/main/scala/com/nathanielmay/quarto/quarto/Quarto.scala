@@ -6,9 +6,9 @@ import scalaz._
 import Scalaz._
 
 final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
-                   active:Option[Piece] = None,
-                   pieces:Set[Piece] = Set(),
-                   lines:Map[(Line, IAttribute), Int] = Map()){
+                            val active:Option[Piece] = None,
+                            pieces:Set[Piece] = Set(),
+                            lines:Map[(Line, IAttribute), Int] = Map()){
 
   private def validate: Boolean = {
 
