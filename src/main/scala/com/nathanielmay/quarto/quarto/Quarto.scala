@@ -116,11 +116,9 @@ object Quarto {
   }
 
   protected def linesFromSquares(squares:Map[(Int, Int), Piece]): Map[(Line, IAttribute), Int] = {
-
     squares.foldLeft(Map[(Line, IAttribute), Int]()) {
       case (lines, (square, piece)) => updateLines(lines, square, piece)
     }
-
   }
 
   protected def updateLines(lines:Map[(Line, IAttribute), Int], square:(Int, Int), piece:Piece): Map[(Line, IAttribute), Int] = {
@@ -130,6 +128,7 @@ object Quarto {
   protected def linesFromSquare(square:(Int, Int), piece:Piece): Map[(Line, IAttribute), Int] ={
     var lines = Map[(Line, IAttribute), Int]()
 
+    //match 0,1,2,3
     if(square._1 == 0){ lines = lines |+| linePairs(Line.H0, piece) }
     if(square._1 == 1){ lines = lines |+| linePairs(Line.H1, piece) }
     if(square._1 == 2){ lines = lines |+| linePairs(Line.H2, piece) }
@@ -151,16 +150,16 @@ object Quarto {
   }
 
   private def linePairs(line:Line, piece:Piece): Map[(Line, IAttribute), Int] = {
-
     val lines: Map[(Line, IAttribute), Int] = Map((line, piece.color) -> 1)
     lines + ((line, piece.size) -> 1, (line, piece.shape) -> 1, (line, piece.top) -> 1)
-
   }
 
 }
 
+//TODO case class???
 final class Piece(val color: Color, val size: Size, val shape: Shape, val top: Top) {
 
+ //TODO use case classes/objects instead of this java enum nonsense
   private def colorChar: String =
     color match {
       case Color.WHITE => "W"
