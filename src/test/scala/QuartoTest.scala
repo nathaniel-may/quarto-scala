@@ -1,9 +1,22 @@
 import org.scalatest._
-import com.nathanielmay.quarto.quarto.{Piece, Quarto, SquareDoesNotExistError, BadTurnError, InvalidBoardError}
-import com.nathanielmay.quarto.java.{Color, Size, Shape, Top}
+import com.nathanielmay.quarto.quarto.{Quarto, _}
+import com.nathanielmay.quarto.java.{Color, Shape, Size, Top}
+
+import scala.util.{Failure, Success}
+
+object QuartoTest {
+
+  def assertWin(turns: List[(Piece, (Int,Int), Option[Piece])]): Unit = {
+    assert(Quarto.takeTurns(Quarto.emptyBoard)(turns) match {
+      case Success(q) => q.isWon
+      case Failure(_) => false
+    })
+  }
+
+}
 
 class QuartoTest extends FlatSpec with Matchers {
-
+/**
   "A Quarto Game" should "not place a piece off the board" in {
     val q = new Quarto("test")
 
@@ -175,17 +188,20 @@ class QuartoTest extends FlatSpec with Matchers {
 
     assert(q.isWon)
   }
+*/
 
-  it should "recognize a vertical win" in {
-    val q = new Quarto("test")
-      .takeTurn(WLQF, (0, 2), Some(BLQF))
-      .takeTurn(BLQF, (1, 2), Some(BLRH))
-      .takeTurn(BLRH, (2, 2), Some(WLQH))
-      .takeTurn(WLQH, (3, 2), None)
+  "a quarto" should "recognize a vertical win" in {
 
-    assert(q.isWon)
+    QuartoTest.assertWin(List(
+      (WLQF, (0,2), Some(BLQF)),
+      (BLQF, (1,2), Some(BLRH)),
+      (BLRH, (2,2), Some(WLQH)),
+      (WLQH, (3,2), None)
+    ))
+
   }
 
+  /*
   it should "recognize a diagonal0 win" in {
     val q = new Quarto("test")
       .takeTurn(WLQF, (0, 0), Some(BLQF))
@@ -220,6 +236,7 @@ class QuartoTest extends FlatSpec with Matchers {
 
     assert(q.isWon)
   }
+  */
 
   "A Piece" should "be equal to a piece with the same attributes" in {
     assert(WLQF == new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))

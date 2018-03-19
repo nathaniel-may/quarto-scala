@@ -1,67 +1,57 @@
 package com.nathanielmay.quarto.quarto
 
 import com.nathanielmay.quarto.java.{Color, IAttribute, Line, Shape, Size, Top}
-import scala.util.{Try,Success,Failure}
+import scala.util.Try
 import scalaz._
 import Scalaz._
 
-
-final class Quarto(boardId:String,
-                   squares:Map[(Int, Int), Piece] = Map(),
+final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
                    active:Option[Piece] = None,
-                   pieces:Map[Piece, Boolean] = Map(),
+                   pieces:Set[Piece] = Set(),
                    lines:Map[(Line, IAttribute), Int] = Map()){
 
-  validate()
+  private def validate: Boolean = {
 
-  private def validate() {
-
-    val validSquares = squares.foldLeft(true)((r:Boolean, c:((Int,Int), Piece)) =>
-      if(r)  Quarto.isValidSquare(c._1) && squares.values.count(_ == c._2) == 1 else false
-    )
-
-    if(!validSquares)throw new InvalidBoardError
-
-    active match {
-      case Some(p) => if(squares.exists(_._2 == p)) throw new InvalidBoardError
-      case _ => if(squares.nonEmpty && !isWon) throw new InvalidBoardError
+    val validSquares = squares forall { case (ix, p) =>
+      Quarto.isValidSquare(ix) && squares.values.count(_ == p) == 1
     }
 
+    val validNextPiece = active match {
+      case Some(p) => !squares.exists(_._2 == p)
+      case None    => squares.isEmpty || isWon
+    }
+
+    validSquares && validNextPiece
   }
 
-  def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Quarto = {
+  def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Try[Quarto] = Try {
 
+    //TODO validate function returns boolean??
     if(!Quarto.isValidSquare(square)) throw new SquareDoesNotExistError
-    if(squares.getOrElse(square, "not occupied") != "not occupied") throw new BadTurnError
+    if(squares.contains(square)) throw new BadTurnError
 
     val winningMove = willWin(toPlace, square)
 
     if(Quarto.samePiece(toPlace, active) && !winningMove) throw new BadTurnError
     if(activeIsPlaced(active) && !winningMove) throw new BadTurnError
 
-    var newActive = active
-    if(winningMove) newActive = None
+    val newActive = if(winningMove) None else active
 
-    Try(new Quarto(boardId,
+    new Quarto(
       squares + (square -> toPlace),
       newActive,
-      pieces + (toPlace -> true),
-      Quarto.updateLines(lines, square, toPlace))) match {
-      case Success(game) => game
-      case Failure(_) => throw new BadTurnError
-    }
-
-
+      pieces + toPlace,
+      Quarto.updateLines(lines, square, toPlace)
+    )
   }
 
-  protected def activeIsPlaced(active:Option[Piece]): Boolean ={
+  protected def activeIsPlaced(active:Option[Piece]): Boolean = {
+    //active.fold(false)(p => pieces.getOrElse(p, false))
     active match {
-      case Some(p) => pieces.get(p) match {
-        case Some(b) => b
-        case _ => false
-      }
-      case _ => false
+      case Some(piece) => pieces.contains(piece)
+      case None    => false
     }
+
   }
 
   def willWin(toPlace:Piece, square:(Int, Int)): Boolean = {
@@ -86,6 +76,21 @@ final class Quarto(boardId:String,
 }
 
 object Quarto {
+
+  val emptyBoard: Quarto = new Quarto(Map(), None, Set(), Map())
+
+  def board(squares:Map[(Int, Int), Piece],
+               active:Option[Piece],
+               pieces:Set[Piece] = Set(),
+               lines:Map[(Line, IAttribute), Int] = Map()): Try[Quarto] =
+  {
+    val q = new Quarto(squares, active, pieces, lines)
+    Try(if (q.validate) q else throw new InvalidBoardError)
+  }
+
+  def takeTurns(q0: => Quarto)(turns: List[(Piece, (Int,Int), Option[Piece])]) : Try[Quarto] =
+    turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
+      game flatMap (_.takeTurn(piece, square, active)) }
 
   private def winningLines(lines:Map[(Line, IAttribute), Int]): Boolean =
     4 <= lines.foldLeft(0)(_ max _._2)
@@ -112,11 +117,9 @@ object Quarto {
 
   protected def linesFromSquares(squares:Map[(Int, Int), Piece]): Map[(Line, IAttribute), Int] = {
 
-    squares.foldLeft(Map[(Line, IAttribute), Int]())(
-      (lines, c) => c match {
-        case (square, piece) => updateLines(lines, square, piece)
-      }
-    )
+    squares.foldLeft(Map[(Line, IAttribute), Int]()) {
+      case (lines, (square, piece)) => updateLines(lines, square, piece)
+    }
 
   }
 
