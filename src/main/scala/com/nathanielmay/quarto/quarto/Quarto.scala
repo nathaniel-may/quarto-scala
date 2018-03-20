@@ -24,17 +24,9 @@ final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
   }
 
   def takeTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Try[Quarto] = Try {
+    if(!validTurn(toPlace, square, active)) throw new BadTurnError
 
-    //TODO validate function returns boolean??
-    if(!Quarto.isValidSquare(square)) throw new SquareDoesNotExistError
-    if(squares.contains(square)) throw new BadTurnError
-
-    val winningMove = willWin(toPlace, square)
-
-    if(Quarto.samePiece(toPlace, active) && !winningMove) throw new BadTurnError
-    if(activeIsPlaced(active) && !winningMove) throw new BadTurnError
-
-    val newActive = if(winningMove) None else active
+    val newActive = if(willWin(toPlace, square)) None else active
 
     new Quarto(
       squares + (square -> toPlace),
@@ -42,6 +34,15 @@ final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
       pieces + toPlace,
       Quarto.updateLines(lines, square, toPlace)
     )
+  }
+
+  private def validTurn(toPlace:Piece, square:(Int, Int), active:Option[Piece]): Boolean = {
+    val winningMove = willWin(toPlace, square)
+
+    Quarto.isValidSquare(square) &&
+    !squares.contains(square) &&
+    (!Quarto.samePiece(toPlace, active) || (Quarto.samePiece(toPlace, active) && winningMove)) &&
+    (!activeIsPlaced(active) || (activeIsPlaced(active) && winningMove))
   }
 
   protected def activeIsPlaced(active:Option[Piece]): Boolean = {
@@ -194,8 +195,6 @@ object Top {
 }
 
 class QuartoError extends Exception {}
-
-class SquareDoesNotExistError extends QuartoError {}
 
 class BadTurnError extends QuartoError {}
 

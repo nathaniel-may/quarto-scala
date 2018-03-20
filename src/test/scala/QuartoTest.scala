@@ -18,10 +18,10 @@ class QuartoTest extends FlatSpec with Matchers {
 
   "A Quarto Game" should "not place a piece off the board" in {
     val q = Quarto.emptyBoard
-    q.takeTurn(WLQF, (-1,0), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
-    q.takeTurn(WLQF, (0, -1), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
-    q.takeTurn(WLQF, (4,0), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
-    q.takeTurn(WLQF, (0, 4), Some(BLQF)).failure.exception shouldBe a [SquareDoesNotExistError]
+    q.takeTurn(WLQF, (-1,0), Some(BLQF)).failure.exception shouldBe a [BadTurnError]
+    q.takeTurn(WLQF, (0, -1), Some(BLQF)).failure.exception shouldBe a [BadTurnError]
+    q.takeTurn(WLQF, (4,0), Some(BLQF)).failure.exception shouldBe a [BadTurnError]
+    q.takeTurn(WLQF, (0, 4), Some(BLQF)).failure.exception shouldBe a [BadTurnError]
   }
 
   it should "reject turn when active and toPlace are the same" in {
