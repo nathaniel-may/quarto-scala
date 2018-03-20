@@ -130,12 +130,12 @@ class QuartoTest extends FlatSpec with Matchers {
       (BLQF, (2, 2), Some(BSRH)))
     )
 
-    val squares = Map((1, 2) -> new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT),
-      (2, 2) -> new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
+    val squares = Map((1, 2) -> Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT),
+      (2, 2) -> Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
     )
 
     val q2 = Quarto.board(squares,
-      Some(new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE))
+      Some(Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE))
     )
 
     assert(q1 == q2)
@@ -221,11 +221,11 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   "A Piece" should "be equal to a piece with the same attributes" in {
-    assert(WLQF == new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))
+    assert(WLQF == Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))
   }
 
   it should "not be equal to a piece with different attributes" in {
-    assert(WLQF != new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT))
+    assert(WLQF != Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT))
   }
 
   //piece declarations
