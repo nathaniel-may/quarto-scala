@@ -1,6 +1,6 @@
 package com.nathanielmay.quarto.quarto
 
-import com.nathanielmay.quarto.java.{Color, IAttribute, Line, Shape, Size, Top}
+//import com.nathanielmay.quarto.java.{Color, IAttribute, Line, Shape, Size, Top}
 import scala.util.Try
 import scalaz._
 import Scalaz._
@@ -8,7 +8,7 @@ import Scalaz._
 final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
                             val active:Option[Piece] = None,
                             pieces:Set[Piece] = Set(),
-                            lines:Map[(Line, IAttribute), Int] = Map()){
+                            lines:Map[(Line, Attribute), Int] = Map()){
 
   private def validate: Boolean = {
 
@@ -82,7 +82,7 @@ object Quarto {
   def board(squares:Map[(Int, Int), Piece],
                active:Option[Piece],
                pieces:Set[Piece] = Set(),
-               lines:Map[(Line, IAttribute), Int] = Map()): Try[Quarto] =
+               lines:Map[(Line, Attribute), Int] = Map()): Try[Quarto] =
   {
     val q = new Quarto(squares, active, pieces, lines)
     Try(if (q.validate) q else throw new InvalidBoardError)
@@ -92,7 +92,7 @@ object Quarto {
     turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
       game flatMap (_.takeTurn(piece, square, active)) }
 
-  private def winningLines(lines:Map[(Line, IAttribute), Int]): Boolean =
+  private def winningLines(lines:Map[(Line, Attribute), Int]): Boolean =
     4 <= lines.foldLeft(0)(_ max _._2)
 
   protected def samePiece(a:Piece, b:Option[Piece]): Boolean = {
@@ -115,20 +115,19 @@ object Quarto {
     }
   }
 
-  protected def linesFromSquares(squares:Map[(Int, Int), Piece]): Map[(Line, IAttribute), Int] = {
-    squares.foldLeft(Map[(Line, IAttribute), Int]()) {
+  protected def linesFromSquares(squares:Map[(Int, Int), Piece]): Map[(Line, Attribute), Int] = {
+    squares.foldLeft(Map[(Line, Attribute), Int]()) {
       case (lines, (square, piece)) => updateLines(lines, square, piece)
     }
   }
 
-  protected def updateLines(lines:Map[(Line, IAttribute), Int], square:(Int, Int), piece:Piece): Map[(Line, IAttribute), Int] = {
+  protected def updateLines(lines:Map[(Line, Attribute), Int], square:(Int, Int), piece:Piece): Map[(Line, Attribute), Int] = {
     lines |+| linesFromSquare(square, piece)
   }
 
-  protected def linesFromSquare(square:(Int, Int), piece:Piece): Map[(Line, IAttribute), Int] ={
-    var lines = Map[(Line, IAttribute), Int]()
+  protected def linesFromSquare(square:(Int, Int), piece:Piece): Map[(Line, Attribute), Int] ={
+    var lines = Map[(Line, Attribute), Int]()
 
-    //match 0,1,2,3
     if(square._1 == 0){ lines = lines |+| linePairs(Line.H0, piece) }
     if(square._1 == 1){ lines = lines |+| linePairs(Line.H1, piece) }
     if(square._1 == 2){ lines = lines |+| linePairs(Line.H2, piece) }
@@ -149,52 +148,68 @@ object Quarto {
 
   }
 
-  private def linePairs(line:Line, piece:Piece): Map[(Line, IAttribute), Int] = {
-    val lines: Map[(Line, IAttribute), Int] = Map((line, piece.color) -> 1)
+  private def linePairs(line:Line, piece:Piece): Map[(Line, Attribute), Int] = {
+    val lines: Map[(Line, Attribute), Int] = Map((line, piece.color) -> 1)
     lines + ((line, piece.size) -> 1, (line, piece.shape) -> 1, (line, piece.top) -> 1)
   }
 
 }
 
-//TODO case class???
-final class Piece(val color: Color, val size: Size, val shape: Shape, val top: Top) {
+final case class Line private (direction:String, num:Int) {
+  override def toString: String = direction + num
+}
+object Line {
+  def H0:Line = new Line("H", 0)
+  def H1:Line = new Line("H", 1)
+  def H2:Line = new Line("H", 2)
+  def H3:Line = new Line("H", 3)
 
- //TODO use case classes/objects instead of this java enum nonsense
-  private def colorChar: String =
-    color match {
-      case Color.WHITE => "W"
-      case Color.BLACK => "B"
-    }
+  def V0:Line = new Line("V", 0)
+  def V1:Line = new Line("V", 1)
+  def V2:Line = new Line("V", 2)
+  def V3:Line = new Line("V", 3)
 
-  private def sizeChar: String =
-    size match {
-      case Size.LARGE => "L"
-      case Size.SMALL => "S"
-    }
+  def D0:Line = new Line("D", 0)
+  def D1:Line = new Line("D", 1)
 
-  private def shapeChar: String =
-    shape match {
-      case Shape.SQUARE => "Q"
-      case Shape.ROUND => "R"
-    }
+}
 
-  private def topChar: String =
-    top match {
-      case Top.FLAT => "F"
-      case Top.HOLE => "H"
-    }
+final case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
+  override def toString: String = "" + color + size + shape + top
+}
 
-  override def toString: String = colorChar + sizeChar + shapeChar + topChar
+trait Attribute {}
 
-  override def equals(that: Any): Boolean =
-    that match {
-      case that: Piece => this.hashCode() == that.hashCode()
-      case _ => false
-    }
+final case class Color private (char:String) extends Attribute {
+  override def toString:String = char
+}
+object Color {
+  def BLACK:Color = new Color("B")
+  def WHITE:Color = new Color("W")
+}
 
-  override def hashCode: Int = toString().hashCode()
+final case class Size private (char:String) extends Attribute {
+  override def toString:String = char
+}
+object Size {
+  def LARGE:Size = new Size("L")
+  def SMALL:Size = new Size("S")
+}
 
+final case class Shape private (char:String) extends Attribute {
+  override def toString:String = char
+}
+object Shape {
+  def ROUND:Shape = new Shape("R")
+  def SQUARE:Shape = new Shape("Q")
+}
 
+final case class Top private (char:String) extends Attribute {
+  override def toString:String = char
+}
+object Top {
+  def FLAT:Top = new Top("F")
+  def HOLE:Top = new Top("H")
 }
 
 class QuartoError extends Exception {}

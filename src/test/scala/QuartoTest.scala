@@ -1,7 +1,6 @@
 import org.scalatest._
 import org.scalatest.TryValues._
-import com.nathanielmay.quarto.quarto.{Quarto, _}
-import com.nathanielmay.quarto.java.{Color, Shape, Size, Top}
+import com.nathanielmay.quarto.quarto._
 import scala.util.{Failure, Success}
 
 object QuartoTest {
@@ -189,21 +188,21 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   //piece declarations
-  val WLQF = new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT)
-  val WLQH = new Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.HOLE)
-  val WLRF = new Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.FLAT)
-  val WLRH = new Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.HOLE)
-  val WSQF = new Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.FLAT)
-  val WSQH = new Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.HOLE)
-  val WSRF = new Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.FLAT)
-  val WSRH = new Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.HOLE)
-  val BLQF = new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
-  val BLQH = new Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.HOLE)
-  val BLRF = new Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.FLAT)
-  val BLRH = new Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.HOLE)
-  val BSQF = new Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.FLAT)
-  val BSQH = new Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.HOLE)
-  val BSRF = new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.FLAT)
-  val BSRH = new Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE)
+  val WLQF = Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT)
+  val WLQH = Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.HOLE)
+  val WLRF = Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.FLAT)
+  val WLRH = Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.HOLE)
+  val WSQF = Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.FLAT)
+  val WSQH = Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.HOLE)
+  val WSRF = Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.FLAT)
+  val WSRH = Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.HOLE)
+  val BLQF = Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
+  val BLQH = Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.HOLE)
+  val BLRF = Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.FLAT)
+  val BLRH = Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.HOLE)
+  val BSQF = Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.FLAT)
+  val BSQH = Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.HOLE)
+  val BSRF = Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.FLAT)
+  val BSRH = Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE)
 
 }
