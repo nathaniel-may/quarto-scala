@@ -1,6 +1,5 @@
 package com.nathanielmay.quarto.quarto
 
-//import com.nathanielmay.quarto.java.{Color, IAttribute, Line, Shape, Size, Top}
 import scala.util.Try
 import scalaz._
 import Scalaz._
@@ -126,29 +125,17 @@ object Quarto {
   }
 
   protected def linesFromSquare(square:(Int, Int), piece:Piece): Map[(Line, Attribute), Int] ={
-    var lines = Map[(Line, Attribute), Int]()
+    val dlines = square match {
+      case (h, v) if h == v => linePairs(Line.D0, piece)
+      case (h, v) if h + v == 3 => linePairs(Line.D1, piece)
+      case _ => Map[(Line, Attribute), Int]()
+    }
 
-    if(square._1 == 0){ lines = lines |+| linePairs(Line.H0, piece) }
-    if(square._1 == 1){ lines = lines |+| linePairs(Line.H1, piece) }
-    if(square._1 == 2){ lines = lines |+| linePairs(Line.H2, piece) }
-    if(square._1 == 3){ lines = lines |+| linePairs(Line.H3, piece) }
-
-    if(square._2 == 0){ lines = lines |+| linePairs(Line.V0, piece) }
-    if(square._2 == 1){ lines = lines |+| linePairs(Line.V1, piece) }
-    if(square._2 == 2){ lines = lines |+| linePairs(Line.V2, piece) }
-    if(square._2 == 3){ lines = lines |+| linePairs(Line.V3, piece) }
-
-    if(square._1 == square._2){ lines = lines |+| linePairs(Line.D0, piece) }
-    if(square._1 == 0 && square._2 == 3){ lines = lines |+| linePairs(Line.D1, piece) }
-    if(square._1 == 1 && square._2 == 2){ lines = lines |+| linePairs(Line.D1, piece) }
-    if(square._1 == 2 && square._2 == 1){ lines = lines |+| linePairs(Line.D1, piece) }
-    if(square._1 == 3 && square._2 == 0){ lines = lines |+| linePairs(Line.D1, piece) }
-
-    lines
-
+    dlines ++ linePairs(Line.H(square._1), piece) ++ linePairs(Line.V(square._2), piece)
   }
 
   private def linePairs(line:Line, piece:Piece): Map[(Line, Attribute), Int] = {
+    //TODO with one apply
     val lines: Map[(Line, Attribute), Int] = Map((line, piece.color) -> 1)
     lines + ((line, piece.size) -> 1, (line, piece.shape) -> 1, (line, piece.top) -> 1)
   }
@@ -159,19 +146,11 @@ final case class Line private (direction:String, num:Int) {
   override def toString: String = direction + num
 }
 object Line {
-  def H0:Line = new Line("H", 0)
-  def H1:Line = new Line("H", 1)
-  def H2:Line = new Line("H", 2)
-  def H3:Line = new Line("H", 3)
-
-  def V0:Line = new Line("V", 0)
-  def V1:Line = new Line("V", 1)
-  def V2:Line = new Line("V", 2)
-  def V3:Line = new Line("V", 3)
-
+  //TODO control nums
+  def H(num:Int):Line = new Line("H", num)
+  def V(num:Int):Line = new Line("V", num)
   def D0:Line = new Line("D", 0)
   def D1:Line = new Line("D", 1)
-
 }
 
 final case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
