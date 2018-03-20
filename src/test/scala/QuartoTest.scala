@@ -60,7 +60,6 @@ class QuartoTest extends FlatSpec with Matchers {
     )
   }
 
-  //TODO does the success case work
   it should "accept invalid active piece for winning move but not save it" in {
     Quarto.takeTurns(Quarto.emptyBoard)(List(
       (WLQF, (0, 0), Some(BLQF)),
@@ -70,6 +69,48 @@ class QuartoTest extends FlatSpec with Matchers {
     ) should matchPattern {
       case Success(game: Quarto) if game.isWon && game.active.isEmpty =>
     }
+  }
+
+  it should "accept when all pieces are played and the last piece wins" in {
+    QuartoTest.assertWin(List(
+      (BLRF, (1, 1), Some(BLRH)),
+      (BLRH, (1, 3), Some(BLQF)),
+      (BLQF, (0, 0), Some(BLQH)),
+      (BLQH, (2, 0), Some(BSRF)),
+      (BSRF, (3, 2), Some(BSRH)),
+      (BSRH, (2, 1), Some(BSQF)),
+      (BSQF, (1, 0), Some(BSQH)),
+      (BSQH, (0, 1), Some(WLQF)),
+      (WLQF, (3, 3), Some(WLRH)),
+      (WLRH, (3, 1), Some(WLQH)),
+      (WLQH, (1, 2), Some(WSRF)),
+      (WSRF, (2, 2), Some(WSRH)),
+      (WSRH, (0, 2), Some(WSQF)),
+      (WSQF, (2, 3), Some(WSQH)),
+      (WSQH, (0, 3), Some(WLRF)),
+      (WLRF, (3, 0), None))
+    )
+  }
+
+  it should "accept when when all pieces are played and the last piece does not win" in {
+    QuartoTest.assertWin(List(
+      (BLRF, (1, 1), Some(BLRH)),
+      (BLRH, (1, 3), Some(BLQF)),
+      (BLQF, (0, 0), Some(BLQH)),
+      (BLQH, (2, 0), Some(BSRF)),
+      (BSRF, (3, 2), Some(BSRH)),
+      (BSRH, (2, 1), Some(BSQF)),
+      (BSQF, (1, 0), Some(BSQH)),
+      (BSQH, (0, 1), Some(WLRF)),
+      (WLRF, (3, 0), Some(WLRH)),
+      (WLRH, (3, 1), Some(WLQF)),
+      (WLQF, (3, 3), Some(WLQH)),
+      (WLQH, (1, 2), Some(WSRF)),
+      (WSRF, (2, 2), Some(WSRH)),
+      (WSRH, (0, 2), Some(WSQF)),
+      (WSQF, (2, 3), Some(WSQH)),
+      (WSQH, (0, 3), None))
+    )
   }
 
   it should "reject when game is already won" in {

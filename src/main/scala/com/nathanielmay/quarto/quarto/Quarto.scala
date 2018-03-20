@@ -10,7 +10,6 @@ final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
                             lines:Map[(Line, Attribute), Int] = Map()){
 
   private def validate: Boolean = {
-
     val validSquares = squares forall { case (ix, p) =>
       Quarto.isValidSquare(ix) && squares.values.count(_ == p) == 1
     }
@@ -46,12 +45,10 @@ final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
   }
 
   protected def activeIsPlaced(active:Option[Piece]): Boolean = {
-    //active.fold(false)(p => pieces.getOrElse(p, false))
     active match {
       case Some(piece) => pieces.contains(piece)
-      case None    => false
+      case None        => false
     }
-
   }
 
   def willWin(toPlace:Piece, square:(Int, Int)): Boolean = {
@@ -68,7 +65,7 @@ final class Quarto private (squares:Map[(Int, Int), Piece] = Map(),
   override def equals(that: Any): Boolean =
     that match {
       case that:Quarto => this.hashCode == that.hashCode
-      case _ => false
+      case _           => false
     }
 
   override def hashCode: Int = toString().hashCode()
