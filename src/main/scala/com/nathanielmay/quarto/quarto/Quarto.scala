@@ -135,9 +135,11 @@ object Quarto {
   }
 
   private def linePairs(line:Line, piece:Piece): Map[(Line, Attribute), Int] = {
-    //TODO with one apply
-    val lines: Map[(Line, Attribute), Int] = Map((line, piece.color) -> 1)
-    lines + ((line, piece.size) -> 1, (line, piece.shape) -> 1, (line, piece.top) -> 1)
+    Map((line, piece.color) -> 1,
+        (line, piece.size)  -> 1,
+        (line, piece.shape) -> 1,
+        (line, piece.top)   -> 1
+    )
   }
 
 }
