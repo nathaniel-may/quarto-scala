@@ -123,13 +123,22 @@ object Quarto {
   }
 
   protected def linesFromSquare(square:(Int, Int), piece:Piece): Map[(Line, Attribute), Int] ={
+    square match {
+      case (h,v) =>
+        linePairs(Line.H(h), piece) ++
+        linePairs(Line.V(v), piece) ++
+        (if      (h == v)     linePairs(Line.D0, piece)
+         else if (h + v == 3) linePairs(Line.D1, piece)
+         else                 Map())
+    }
+
     val dlines = square match {
       case (h, v) if h == v => linePairs(Line.D0, piece)
       case (h, v) if h + v == 3 => linePairs(Line.D1, piece)
-      case _ => Map[(Line, Attribute), Int]()
+      case _ => Map()
     }
 
-    dlines ++ linePairs(Line.H(square._1), piece) ++ linePairs(Line.V(square._2), piece)
+    dlines ++ linePairs(Horizontal(Index(square._1)), piece) ++ linePairs(Line.V(square._2), piece)
   }
 
   private def linePairs(line:Line, piece:Piece): Map[(Line, Attribute), Int] = {
@@ -142,54 +151,47 @@ object Quarto {
 
 }
 
-final case class Line private (direction:String, num:Int) {
-  override def toString: String = direction + num
-}
-object Line {
-  //TODO control nums
-  def H(num:Int):Line = new Line("H", num)
-  def V(num:Int):Line = new Line("V", num)
-  def D0:Line = new Line("D", 0)
-  def D1:Line = new Line("D", 1)
+sealed abstract class Index(val index: Int)
+case object I0 extends Index(0)
+case object I1 extends Index(1)
+case object I2 extends Index(2)
+case object I3 extends Index(3)
+
+sealed trait Angle
+case object Forward  extends Angle { override def toString:String = "D1" }
+case object Backward extends Angle { override def toString:String = "D0" }
+
+sealed trait Line
+case class Horizontal(i:Index)   extends Line { override def toString:String = "H" + i }
+case class Vertical(i:Index)     extends Line { override def toString:String = "V" + i }
+case class Diagonal(angle:Angle) extends Line { override def toString:String = "D" + angle }
+
+sealed trait Line {
+  def direction:String
+  def index:Index
 }
 
 final case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   override def toString: String = "" + color + size + shape + top
 }
 
-trait Attribute {}
+sealed trait Attribute
 
-final case class Color private (char:String) extends Attribute {
-  override def toString:String = char
-}
-object Color {
-  def BLACK:Color = new Color("B")
-  def WHITE:Color = new Color("W")
-}
+trait Color extends Attribute
+case object White extends Color { override def toString = "W" }
+case object Black extends Color { override def toString = "B" }
 
-final case class Size private (char:String) extends Attribute {
-  override def toString:String = char
-}
-object Size {
-  def LARGE:Size = new Size("L")
-  def SMALL:Size = new Size("S")
-}
+trait Size extends Attribute
+case object Large extends Size { override def toString = "L" }
+case object Small extends Size { override def toString = "S" }
 
-final case class Shape private (char:String) extends Attribute {
-  override def toString:String = char
-}
-object Shape {
-  def ROUND:Shape = new Shape("R")
-  def SQUARE:Shape = new Shape("Q")
-}
+trait Shape extends Attribute
+case object Round extends Shape { override def toString = "R" }
+case object Square extends Shape { override def toString = "Q" }
 
-final case class Top private (char:String) extends Attribute {
-  override def toString:String = char
-}
-object Top {
-  def FLAT:Top = new Top("F")
-  def HOLE:Top = new Top("H")
-}
+trait Top extends Attribute
+case object Flat extends Top { override def toString = "F" }
+case object Hole extends Top { override def toString = "H" }
 
 class QuartoError extends Exception {}
 
