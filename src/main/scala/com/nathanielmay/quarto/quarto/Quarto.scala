@@ -4,17 +4,42 @@ import scala.util.Try
 import scalaz._
 import Scalaz._
 
-sealed case class Quarto(pieces: Map[Piece, State]){
-  def takeTurn(): Quarto = {
-
-  }
-}
+sealed case class Quarto(pieces: Map[Piece, State])
 
 case object Quarto{
-  def isWon(game: Quarto): Boolean = {
-    val countss: Map[LinePair, Int] = game.pieces.foldRight(Map())((ps, counts) =>
-      counts |+| (ps match { case (piece: Piece, state: State) => linePairs(piece, state) } )
+
+  val emptyBoard = Quarto(Map()[Piece, State])
+
+  def takeTurn(toPlace: Piece, square: Square, active: Option[Piece]): Try[Quarto] = Try {
+    if(!validTurn(toPlace, square, active)) throw new BadTurnError
+
+    val newActive = if(willWin(toPlace, square)) None else active
+
+    new Quarto(
+      squares + (square -> toPlace),
+      newActive,
+      pieces + toPlace,
+      Quarto.updateLines(lines, square, toPlace)
     )
+  }
+
+  private def validTurn(game: Quarto, toPlace:Piece, square:(Int, Int), active:Option[Piece]): Boolean = {
+    val winningMove = willWin(toPlace, square)
+
+    !squares.contains(square) &&
+    (toPlace != active) || ((toPlace == active) && winningMove) &&
+    //TODO active is option. It needs to be matched for Some Piece
+    (game.pieces.contains(active) !activeIsPlaced(active) || (activeIsPlaced(active) && winningMove))
+  }
+
+  def takeTurns(q0: => Quarto)(turns: List[(Piece, (Int,Int), Option[Piece])]) : Try[Quarto] =
+    turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
+      game flatMap (_.takeTurn(piece, square, active)) }
+
+  def isWon(game: Quarto): Boolean = {
+    game.pieces.foldRight(Map()[LinePair, Int])((ps, counts) =>
+      counts |+| (ps match { case (piece: Piece, state: State) => linePairs(piece, state) } )
+    ).valuesIterator.max >= 4
   }
 
   protected def linePairs(piece: Piece, state: State): Map[LinePair, Int] = {
@@ -36,10 +61,10 @@ case object Quarto{
       case placed: Placed => getDiagonal(placed.square)
     }) match {
       case Some(line: Line) => Map(LinePair(line, piece.color) -> 1,
-                             LinePair(line, piece.size)  -> 1,
-                             LinePair(line, piece.shape) -> 1,
-                             LinePair(line, piece.top)   -> 1)
-      case None =>
+                                   LinePair(line, piece.size)  -> 1,
+                                   LinePair(line, piece.shape) -> 1,
+                                   LinePair(line, piece.top)   -> 1)
+      case None => Map()
     }
   }
 

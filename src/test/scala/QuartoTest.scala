@@ -7,7 +7,7 @@ object QuartoTest {
 
   def assertWin(turns: List[(Piece, (Int,Int), Option[Piece])]): Unit = {
     assert(Quarto.takeTurns(Quarto.emptyBoard)(turns) match {
-      case Success(q) => q.isWon
+      case Success(q) => Quarto.isWon(q)
       case Failure(_) => false
     })
   }
@@ -221,29 +221,29 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   "A Piece" should "be equal to a piece with the same attributes" in {
-    assert(WLQF == Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT))
+    assert(WLQF == Piece(White, Large, Square, Flat))
   }
 
   it should "not be equal to a piece with different attributes" in {
-    assert(WLQF != Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT))
+    assert(WLQF != Piece(Black, Large, Square, Flat))
   }
 
   //piece declarations
-  val WLQF = Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.FLAT)
-  val WLQH = Piece(Color.WHITE, Size.LARGE, Shape.SQUARE, Top.HOLE)
-  val WLRF = Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.FLAT)
-  val WLRH = Piece(Color.WHITE, Size.LARGE, Shape.ROUND, Top.HOLE)
-  val WSQF = Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.FLAT)
-  val WSQH = Piece(Color.WHITE, Size.SMALL, Shape.SQUARE, Top.HOLE)
-  val WSRF = Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.FLAT)
-  val WSRH = Piece(Color.WHITE, Size.SMALL, Shape.ROUND, Top.HOLE)
-  val BLQF = Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.FLAT)
-  val BLQH = Piece(Color.BLACK, Size.LARGE, Shape.SQUARE, Top.HOLE)
-  val BLRF = Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.FLAT)
-  val BLRH = Piece(Color.BLACK, Size.LARGE, Shape.ROUND, Top.HOLE)
-  val BSQF = Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.FLAT)
-  val BSQH = Piece(Color.BLACK, Size.SMALL, Shape.SQUARE, Top.HOLE)
-  val BSRF = Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.FLAT)
-  val BSRH = Piece(Color.BLACK, Size.SMALL, Shape.ROUND, Top.HOLE)
+  val WLQF = Piece(White, Large, Square, Flat)
+  val WLQH = Piece(White, Large, Square, Hole)
+  val WLRF = Piece(White, Large, Round, Flat)
+  val WLRH = Piece(White, Large, Round, Hole)
+  val WSQF = Piece(White, Small, Square, Flat)
+  val WSQH = Piece(White, Small, Square, Hole)
+  val WSRF = Piece(White, Small, Round, Flat)
+  val WSRH = Piece(White, Small, Round, Hole)
+  val BLQF = Piece(Black, Large, Square, Flat)
+  val BLQH = Piece(Black, Large, Square, Hole)
+  val BLRF = Piece(Black, Large, Round, Flat)
+  val BLRH = Piece(Black, Large, Round, Hole)
+  val BSQF = Piece(Black, Small, Square, Flat)
+  val BSQH = Piece(Black, Small, Square, Hole)
+  val BSRF = Piece(Black, Small, Round, Flat)
+  val BSRH = Piece(Black, Small, Round, Hole)
 
 }
