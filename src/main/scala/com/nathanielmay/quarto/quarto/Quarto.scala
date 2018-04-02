@@ -19,14 +19,15 @@ case object Quarto{
 
   protected def linePairs(piece: Piece, state: State): Map[LinePair, Int] = {
     (state match {
-      case placed: Placed => Map(LinePair(Horizontal(placed.square.h), piece.color) -> 1,
-                                 LinePair(Horizontal(placed.square.h), piece.size)  -> 1,
-                                 LinePair(Horizontal(placed.square.h), piece.shape) -> 1,
-                                 LinePair(Horizontal(placed.square.h), piece.top)   -> 1,
-                                 LinePair(Vertical(placed.square.v),   piece.color) -> 1,
-                                 LinePair(Vertical(placed.square.v),   piece.size)  -> 1,
-                                 LinePair(Vertical(placed.square.v),   piece.shape) -> 1,
-                                 LinePair(Vertical(placed.square.v),   piece.top)   -> 1)
+      case Placed(square) => Map(LinePair(Horizontal(square.h), piece.color) -> 1,
+                                 LinePair(Horizontal(square.h), piece.size)  -> 1,
+                                 LinePair(Horizontal(square.h), piece.shape) -> 1,
+                                 LinePair(Horizontal(square.h), piece.top)   -> 1,
+                                 LinePair(Vertical(square.v),   piece.color) -> 1,
+                                 LinePair(Vertical(square.v),   piece.size)  -> 1,
+                                 LinePair(Vertical(square.v),   piece.shape) -> 1,
+                                 LinePair(Vertical(square.v),   piece.top)   -> 1)
+      case Active => Map()
     }) ++ diagonalLinePairs(piece, state)
   }
 
