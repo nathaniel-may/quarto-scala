@@ -17,7 +17,8 @@ object QuartoTest {
 class QuartoTest extends FlatSpec with Matchers {
 
   it should "reject turn when active and toPlace are the same" in {
-    Quarto.newGame.takeTurn(WLQF, Square(I0, I0), Some(WLQF)).failure.exception shouldBe a [BadTurnError]
+    Quarto.newGame
+      .takeTurn(WLQF, Square(I0, I0), Some(WLQF)).failure.exception shouldBe a [BadTurnError]
   }
 
   it should "reject turn when active piece is already placed" in {
@@ -128,7 +129,10 @@ class QuartoTest extends FlatSpec with Matchers {
 
     val q2 = Quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
 
-    assert(q1 == q2)
+    q1 match {
+      case Success(game) => assert(game == q2)
+      case Failure(_) => fail()
+    }
   }
 
   //TODO illegal states are representable (board filled with one kind of piece etc)
