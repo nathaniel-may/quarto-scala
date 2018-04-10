@@ -7,22 +7,30 @@ import Scalaz._
 
 case class Quarto(board: Board, active: Option[Piece]){
   def takeTurn(piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
+    if (!this.isValid) Failure(InvalidGameError())
     active match {
       case Some(p) if p != piece => Failure(BadTurnError(s"must place the active piece: $active actual piece placed: $piece"))
       case None if this != Quarto.newGame => Failure(BadTurnError(s"no active piece set for in progress game"))
     }
     if (board.squares.contains(square)) Failure(BadTurnError(s"square $square is already occupied"))
     if (board.squares.values.exists(_ == piece)) Failure(BadTurnError(s"piece $piece has already been placed")) //TODO should never reach here if active is checked for
-
     forOpponent match {
       case Some(p) if board.squares.values.exists(_ == p) => Failure(BadTurnError(s"active piece $active has already been placed"))
       case None if !Quarto.isWon(Quarto(Board(board.squares + (square -> piece)), None)) &&
-        !Board(board.squares + (square -> piece).isFull => 
-        Failure(BadTurnError(s"no piece chosen for opponent and game will not be over"))
+        !Board(board.squares + (square -> piece)).isFull =>
+        Failure(BadTurnError(s"no piece chosen for opponent and game still has more turns"))
     }
 
-    //TODO deal with none active being ok if last turn (or winning turn?)
     Success(Quarto(board(board.squares + (square -> piece)), active))
+  }
+
+  def isValid: Boolean = {
+    active match {
+      case _ if !board.isValid => false
+      case Some(p) if board.contains(p) => false
+      case None if !Quarto.isWon(this) || !board.isFull => false
+      case _ => true
+    }
   }
 }
 
@@ -43,7 +51,8 @@ case object Quarto{
 
   def takeTurns(q0: => Quarto)(turns: List[(Piece, Square, Option[Piece])]) : Try[Quarto] =
     turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
-      game flatMap (_.takeTurn(piece, square, active)) }
+      game flatMap (_.takeTurn(piece, square, active))
+    }
 
   def isWon(game: Quarto): Boolean = {
     if (winningLines(game).isEmpty) false else true
@@ -62,8 +71,12 @@ case object Quarto{
 
 }
 
-sealed case class Board(squares: Map[Square, Piece], Active: Option[Piece]){
+sealed case class Board(squares: Map[Square, Piece]){
+  def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
   def isFull: Boolean = squares.size >= 16
+  def isValid: Boolean = 1 <= squares.foldRight(Map[Piece, Int]())({
+    case ((_, piece), map) => map |+| Map(piece -> 1)
+  }).maxBy(_._2)._2
 }
 
 case object Board { val newBoard = Board(Map()) }
@@ -114,6 +127,6 @@ case class Horizontal(i:Index)   extends Line { override def toString:String = "
 case class Vertical(i:Index)     extends Line { override def toString:String = "V" + i }
 case class Diagonal(angle:Angle) extends Line { override def toString:String = "D" + angle }
 
-class QuartoError extends Exception
+case class QuartoError() extends Exception
 case class BadTurnError(msg: String) extends QuartoError
-class InvalidBoardError extends QuartoError
+case class InvalidGameError() extends QuartoError
