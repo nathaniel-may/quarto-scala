@@ -4,13 +4,11 @@ import scala.util.Try
 import scalaz._
 import Scalaz._
 
-sealed case class Quarto(pieces: Map[Piece, State])
+case class Quarto(board: Board)
 
 case object Quarto{
 
-  val emptyBoard = Quarto(Map()[Piece, State])
-
-  def takeTurn(toPlace: Piece, square: Square, active: Option[Piece]): Try[Quarto] = Try {
+  def takeTurn(game: Quarto, toPlace: Piece, square: Square, active: Option[Piece]): Try[Quarto] = Try {
     if(!validTurn(toPlace, square, active)) throw new BadTurnError
 
     val newActive = if(willWin(toPlace, square)) None else active
@@ -23,7 +21,7 @@ case object Quarto{
     )
   }
 
-  private def validTurn(game: Quarto, toPlace:Piece, square:(Int, Int), active:Option[Piece]): Boolean = {
+  private def validTurn(game: Quarto, toPlace: Piece, square: (Int, Int), active:Option[Piece]): Boolean = {
     val winningMove = willWin(toPlace, square)
 
     !squares.contains(square) &&
@@ -37,14 +35,19 @@ case object Quarto{
       game flatMap (_.takeTurn(piece, square, active)) }
 
   def isWon(game: Quarto): Boolean = {
-    game.pieces.foldRight(Map()[LinePair, Int])((ps, counts) =>
-      counts |+| (ps match { case (piece: Piece, state: State) => linePairs(piece, state) } )
+    game.pieces.foldRight(Map())((ps, counts) =>
+      counts |+| (ps match { case (piece, state) => linePairs(piece, state) } )
     ).valuesIterator.max >= 4
   }
 
   protected def linePairs(piece: Piece, state: State): Map[LinePair, Int] = {
+    val attrs = List(piece.color, piece.size, piece.shape, piece.top)
     (state match {
-      case Placed(square) => Map(LinePair(Horizontal(square.h), piece.color) -> 1,
+      case Placed(square) =>
+        (attrs.map(LinePair(Horizontal(square.h), _) -> 1) ++
+         attrs.map(LinePair(Vertical(square.v),   _) -> 1)).toMap
+
+        Map(LinePair(Horizontal(square.h), piece.color) -> 1,
                                  LinePair(Horizontal(square.h), piece.size)  -> 1,
                                  LinePair(Horizontal(square.h), piece.shape) -> 1,
                                  LinePair(Horizontal(square.h), piece.top)   -> 1,
@@ -58,23 +61,26 @@ case object Quarto{
 
   protected def diagonalLinePairs(piece: Piece, state: State): Map[LinePair, Int] = {
     (state match {
-      case placed: Placed => getDiagonal(placed.square)
+      case Placed(square) => getDiagonal(square)
+        //TODO what if it's not.
     }) match {
-      case Some(line: Line) => Map(LinePair(line, piece.color) -> 1,
-                                   LinePair(line, piece.size)  -> 1,
-                                   LinePair(line, piece.shape) -> 1,
-                                   LinePair(line, piece.top)   -> 1)
+      case Some(line) => Map(LinePair(line, piece.color) -> 1,
+                             LinePair(line, piece.size)  -> 1,
+                             LinePair(line, piece.shape) -> 1,
+                             LinePair(line, piece.top)   -> 1)
       case None => Map()
     }
   }
 
   protected def getDiagonal(square: Square): Option[Diagonal] = {
-    if(square.h == square.v) Some(Diagonal(Backward))
-    else if(3 == square.h.i + square.v.i) Some(Diagonal (Forward))
+    if (square.h == square.v) Some(Diagonal(Backward))
+    else if (3 == square.h.i + square.v.i) Some(Diagonal (Forward))
     else None
   }
 
 }
+
+sealed case class Board(pieces: Map[Square, Piece], Active: Option[Piece])
 
 sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   override def toString: String = "" + color + size + shape + top
