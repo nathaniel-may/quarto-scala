@@ -8,87 +8,49 @@ case class Quarto(board: Board)
 
 case object Quarto{
 
-  def takeTurn(game: Quarto, toPlace: Piece, square: Square, active: Option[Piece]): Try[Quarto] = Try {
-    if(!validTurn(toPlace, square, active)) throw new BadTurnError
-
-    val newActive = if(willWin(toPlace, square)) None else active
-
-    new Quarto(
-      squares + (square -> toPlace),
-      newActive,
-      pieces + toPlace,
-      Quarto.updateLines(lines, square, toPlace)
-    )
-  }
-
-  private def validTurn(game: Quarto, toPlace: Piece, square: (Int, Int), active:Option[Piece]): Boolean = {
-    val winningMove = willWin(toPlace, square)
-
-    !squares.contains(square) &&
-    (toPlace != active) || ((toPlace == active) && winningMove) &&
-    //TODO active is option. It needs to be matched for Some Piece
-    (game.pieces.contains(active) !activeIsPlaced(active) || (activeIsPlaced(active) && winningMove))
-  }
+  val allLines = hLines ++ vLines ++ dLines
+  val hLines = indexes.foldRight(List(): List[List[Square]])(
+    (dex, squares) => squares ++ List(for{ i <- indexes } yield Square(dex, i))
+  )
+  val vLines = indexes.foldRight(List(): List[List[Square]])(
+    (dex, squares) => squares ++ List(for{ i <- indexes } yield Square(i, dex))
+  )
+  val dLines: List[List[Square]] = List(for( (x, y) <- indexes zip indexes) yield Square(x,y)) ++
+                                   List(for( (x, y) <- indexes zip indexes.reverse) yield Square(x,y))
+  //TODO can add squares for variant
+  val indexes = List(I0, I1, I2, I3)
 
   def takeTurns(q0: => Quarto)(turns: List[(Piece, (Int,Int), Option[Piece])]) : Try[Quarto] =
     turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
       game flatMap (_.takeTurn(piece, square, active)) }
 
   def isWon(game: Quarto): Boolean = {
-    game.pieces.foldRight(Map())((ps, counts) =>
-      counts |+| (ps match { case (piece, state) => linePairs(piece, state) } )
-    ).valuesIterator.max >= 4
+    if (winningLines(game).isEmpty) false else true
   }
 
-  protected def linePairs(piece: Piece, state: State): Map[LinePair, Int] = {
-    val attrs = List(piece.color, piece.size, piece.shape, piece.top)
-    (state match {
-      case Placed(square) =>
-        (attrs.map(LinePair(Horizontal(square.h), _) -> 1) ++
-         attrs.map(LinePair(Vertical(square.v),   _) -> 1)).toMap
-
-        Map(LinePair(Horizontal(square.h), piece.color) -> 1,
-                                 LinePair(Horizontal(square.h), piece.size)  -> 1,
-                                 LinePair(Horizontal(square.h), piece.shape) -> 1,
-                                 LinePair(Horizontal(square.h), piece.top)   -> 1,
-                                 LinePair(Vertical(square.v),   piece.color) -> 1,
-                                 LinePair(Vertical(square.v),   piece.size)  -> 1,
-                                 LinePair(Vertical(square.v),   piece.shape) -> 1,
-                                 LinePair(Vertical(square.v),   piece.top)   -> 1)
-      case Active => Map()
-    }) ++ diagonalLinePairs(piece, state)
+  def winningLines(game: Quarto): List[List[Square]] = {
+    allLines.filter(winningLine(game, _))
   }
 
-  protected def diagonalLinePairs(piece: Piece, state: State): Map[LinePair, Int] = {
-    (state match {
-      case Placed(square) => getDiagonal(square)
-        //TODO what if it's not.
-    }) match {
-      case Some(line) => Map(LinePair(line, piece.color) -> 1,
-                             LinePair(line, piece.size)  -> 1,
-                             LinePair(line, piece.shape) -> 1,
-                             LinePair(line, piece.top)   -> 1)
-      case None => Map()
-    }
-  }
-
-  protected def getDiagonal(square: Square): Option[Diagonal] = {
-    if (square.h == square.v) Some(Diagonal(Backward))
-    else if (3 == square.h.i + square.v.i) Some(Diagonal (Forward))
-    else None
+  def winningLine(game: Quarto, line: List[Square]): Boolean = {
+    val pieces = line flatMap {piece => game.board.squares get piece}
+    val attrCounts = pieces.foldRight(Map())((piece, counts) =>
+      for(attr <- piece.attrs) {counts |+| attr -> 1})
+    if (4 >= attrCounts.valuesIterator.max) true else false
   }
 
 }
 
-sealed case class Board(pieces: Map[Square, Piece], Active: Option[Piece])
+sealed case class Board(squares: Map[Square, Piece], Active: Option[Piece])
 
 sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
+  val attrs = List(color, size, shape, top)
   override def toString: String = "" + color + size + shape + top
 }
 
 sealed case class Square(h: Index, v: Index)
 
-sealed case class Index(i: Int)
+sealed abstract class Index(i: Int)
 case object I0 extends Index(0)
 case object I1 extends Index(1)
 case object I2 extends Index(2)
