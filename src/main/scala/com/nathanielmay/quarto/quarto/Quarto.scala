@@ -85,12 +85,6 @@ case object I1 extends Index(1)
 case object I2 extends Index(2)
 case object I3 extends Index(3)
 
-sealed trait State
-case object Active extends State
-case class Placed(square: Square) extends State
-
-sealed case class LinePair(line: Line, attribute: Attribute)
-
 sealed trait Attribute
 
 trait Color extends Attribute
@@ -108,15 +102,6 @@ case object Square extends Shape { override def toString = "Q" }
 trait Top extends Attribute
 case object Flat extends Top { override def toString = "F" }
 case object Hole extends Top { override def toString = "H" }
-
-sealed trait Angle
-case object Forward  extends Angle { override def toString:String = "D1" }
-case object Backward extends Angle { override def toString:String = "D0" }
-
-sealed trait Line
-case class Horizontal(i:Index)   extends Line { override def toString:String = "H" + i }
-case class Vertical(i:Index)     extends Line { override def toString:String = "V" + i }
-case class Diagonal(angle:Angle) extends Line { override def toString:String = "D" + angle }
 
 abstract class QuartoError extends Exception
 case class BadTurnError(msg: String) extends QuartoError
