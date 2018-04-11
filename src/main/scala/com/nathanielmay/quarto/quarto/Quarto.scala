@@ -13,7 +13,7 @@ case class Quarto(board: Board, active: Option[Piece]){
       case _ =>
     }
     if (board.squares.contains(square)) Failure(BadTurnError(s"square $square is already occupied"))
-    if (board.squares.values.exists(_ == piece)) Failure(BadTurnError(s"piece $piece has already been placed")) //TODO should never reach here if active is checked for
+    if (board.squares.values.exists(_ == piece)) Failure(BadTurnError(s"piece $piece has already been placed")) //TODO should never trigger if active is checked for
     forOpponent match {
       case Some(p) if board.squares.values.exists(_ == p) => Failure(BadTurnError(s"piece for opponent $p has already been placed"))
       //TODO this doesn't actually catch when forOpponent and piece are the same some how...
@@ -28,12 +28,10 @@ case class Quarto(board: Board, active: Option[Piece]){
   }
 
   def isValid: Boolean = {
-    active match {
-      case _ if !board.isValid => false
-      case Some(p) if board.contains(p) => false
-      case None if !Quarto.isWon(this) || !board.isFull => false
-      case _ => true
-    }
+    board.isValid && (active match {
+      case Some(p) => !board.contains(p)
+      case None => Quarto.isWon(this) || board.isFull
+    })
   }
 }
 
@@ -41,14 +39,10 @@ case object Quarto{
   val newGame = Quarto(Board.newBoard, None)
 
   private val indexes = List(I0, I1, I2, I3)
-  private val hLines = indexes.foldRight(List(): List[List[Square]])(
-    (dex, squares) => squares ++ List(for{ i <- indexes } yield Square(dex, i))
-  )
-  private val vLines = indexes.foldRight(List(): List[List[Square]])(
-    (dex, squares) => squares ++ List(for{ i <- indexes } yield Square(i, dex))
-  )
-  private val dLines: List[List[Square]] = List(for( (x, y) <- indexes zip indexes) yield Square(x,y)) ++
-                                   List(for( (x, y) <- indexes zip indexes.reverse) yield Square(x,y))
+  private val hLines = indexes.map(h => indexes.map(v => Square(h, v)))
+  private val vLines = indexes.map(v => indexes.map(h => Square(h, v)))
+  private val dLines = List(indexes zip indexes map {case (h, v) => Square(h, v)},
+                                        indexes zip indexes.reverse map {case (h, v) => Square(h, v)})
   //TODO can add squares for variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
@@ -58,19 +52,14 @@ case object Quarto{
     }
 
   def isWon(game: Quarto): Boolean = {
-    if (winningLines(game).isEmpty) false else true
+    allLines.exists(winningLine(game, _))
   }
 
-  def winningLines(game: Quarto): List[List[Square]] = {
-    allLines.filter(winningLine(game, _))
-  }
-
-  //TODO this is messy
   def winningLine(game: Quarto, line: List[Square]): Boolean = {
     val pieces = line flatMap {piece => game.board.squares get piece}
-    val attrCounts = pieces.foldRight(Map(): Map[Attribute, Int])((piece, counts) =>
-      counts |+| piece.attrs.foldRight(Map(): Map[Attribute, Int])((attr, m) => m |+| Map(attr -> 1)))
-    attrCounts.foldRight(false)({case ((_, count), won) if !won => 4 <= count})
+    val attrCounts = pieces.foldRight(Map[Attribute, Int]())((piece, counts) =>
+      piece.attrs.foldRight(counts)((attr, m) => m |+| Map(attr -> 1)))
+    attrCounts.exists(4 >= _._2)
   }
 
 }
