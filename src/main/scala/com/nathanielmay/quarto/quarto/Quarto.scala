@@ -37,7 +37,6 @@ case class Quarto(board: Board, active: Option[Piece]){
     })
   }
 
-  //TODO won't need if Boards have unique maps instead
   def isValid: Boolean = {
     board.isValid && (active match {
       case Some(p) => !board.contains(p)
@@ -56,7 +55,7 @@ case object Quarto{
   private val vLines = indexes.map(v => indexes.map(h => Square(h, v)))
   private val dLines = List(indexes zip indexes map {case (h, v) => Square(h, v)},
                                         indexes zip indexes.reverse map {case (h, v) => Square(h, v)})
-  //TODO can add squares for variant
+  //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
   def takeTurns(q0: => Quarto)(turns: List[(Piece, Square, Option[Piece])]) : Try[Quarto] =
