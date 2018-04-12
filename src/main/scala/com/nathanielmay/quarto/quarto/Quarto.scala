@@ -1,38 +1,46 @@
 package com.nathanielmay.quarto.quarto
 
-import scala.util.{Try, Success, Failure}
+import scala.util.Try
 import scalaz._
 import Scalaz._
 
 case class Quarto(board: Board, active: Option[Piece]){
-  def takeTurn(piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
-    if (!this.isValid) Failure(InvalidGameError())
-    active match {
-      case Some(p) if p != piece => Failure(BadTurnError(s"must place the active piece: $active. actual piece placed: $piece"))
-      case None if this != Quarto.newGame => Failure(BadTurnError(s"no active piece set for in progress game"))
-      case _ =>
-    }
-    if (board.squares.contains(square)) Failure(BadTurnError(s"square $square is already occupied"))
-    if (board.squares.values.exists(_ == piece)) Failure(BadTurnError(s"piece $piece has already been placed")) //TODO should never trigger if active is checked for
-    forOpponent match {
-      case Some(p) if board.squares.values.exists(_ == p) => Failure(BadTurnError(s"piece for opponent $p has already been placed"))
-      //TODO this doesn't actually catch when forOpponent and piece are the same some how...
-      case Some(p) if p == piece => Failure(BadTurnError(s"piece being placed and piece for opponent are the same: $p"))
-      case None if !Quarto.isWon(Quarto(Board(board.squares + (square -> piece)), None)) &&
-        !Board(board.squares + (square -> piece)).isFull =>
-        Failure(BadTurnError(s"no piece chosen for opponent and game still has more turns"))
-      case _ =>
-    }
 
-    Success(Quarto(Board(board.squares + (square -> piece)), active))
+  def takeTurn(piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
+    Try({
+      if (!this.isValid) throw InvalidGameError("not a valid game")
+      if (Quarto.isWon(this)) throw InvalidGameError("cannot take a turn on a completed game")
+
+      active match {
+        case Some(p) if p != piece => throw BadTurnError(s"must place the active piece: $active. actual piece placed: $piece")
+        case None if this != Quarto.newGame => throw BadTurnError(s"no active piece set for in progress game")
+        case _ =>
+      }
+
+      if (board.squares.contains(square)) throw BadTurnError(s"square $square is already occupied")
+      if (board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed") //TODO should never trigger if forOpponent is checked for
+
+      forOpponent match {
+        case Some(p) if board.squares.values.exists(_ == p) => throw BadTurnError(s"piece for opponent $p has already been placed")
+        case Some(p) if p == piece => throw BadTurnError(s"piece being placed and piece for opponent are the same: $p")
+        case None if !Quarto.isWon(Quarto(Board(board.squares + (square -> piece)), None)) &&
+          !isLastTurn => throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
+        case _ =>
+      }
+
+      Quarto(Board(board.squares + (square -> piece)), forOpponent)
+    })
   }
 
+  //TODO won't need if Boards have unique maps instead
   def isValid: Boolean = {
     board.isValid && (active match {
       case Some(p) => !board.contains(p)
-      case None => Quarto.isWon(this) || board.isFull
+      case None => board == Board.newBoard || Quarto.isWon(this) || board.isFull
     })
   }
+
+  def isLastTurn: Boolean = board.squares.size == 15
 }
 
 case object Quarto{
@@ -57,9 +65,9 @@ case object Quarto{
 
   def winningLine(game: Quarto, line: List[Square]): Boolean = {
     val pieces = line flatMap {piece => game.board.squares get piece}
-    val attrCounts = pieces.foldRight(Map[Attribute, Int]())((piece, counts) =>
-      piece.attrs.foldRight(counts)((attr, m) => m |+| Map(attr -> 1)))
-    attrCounts.exists(4 >= _._2)
+    val attrCounts = pieces.foldLeft(Map[Attribute, Int]())((counts, piece) =>
+      piece.attrs.foldLeft(counts)((m, attr) => m |+| Map(attr -> 1)))
+    attrCounts.exists(4 <= _._2)
   }
 
 }
@@ -67,7 +75,7 @@ case object Quarto{
 sealed case class Board(squares: Map[Square, Piece]){
   def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
   def isFull: Boolean = squares.size >= 16
-  def isValid: Boolean = squares.foldRight(true)({case ((_, piece), valid) if valid => 1 >= squares.valuesIterator.count(_ == piece)})
+  def isValid: Boolean = squares.foldLeft(true)({case (valid, (_, piece)) => valid && 1 >= squares.valuesIterator.count(_ == piece)})
 }
 
 case object Board { val newBoard = Board(Map()) }
@@ -103,6 +111,8 @@ trait Top extends Attribute
 case object Flat extends Top { override def toString = "F" }
 case object Hole extends Top { override def toString = "H" }
 
-abstract class QuartoError extends Exception
-case class BadTurnError(msg: String) extends QuartoError
-case class InvalidGameError() extends QuartoError
+abstract class QuartoError(msg: String) extends Exception {
+  override def toString: String = super.toString + s"\n$msg"
+}
+case class BadTurnError(msg: String) extends QuartoError(msg)
+case class InvalidGameError(msg: String) extends QuartoError(msg)
