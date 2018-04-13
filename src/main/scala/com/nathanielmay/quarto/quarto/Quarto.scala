@@ -1,6 +1,6 @@
 package com.nathanielmay.quarto.quarto
 
-import scala.util.Try
+import scala.util.{Try, Failure, Success}
 import scalaz._
 import Scalaz._
 
@@ -8,31 +8,20 @@ case class Quarto(board: Board, active: Option[Piece]){
 
   def takeTurn(piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
     Try({
-      if (!this.isValid)      throw InvalidGameError("not a valid game")
-      if (Quarto.isWon(this)) throw InvalidGameError("cannot take a turn on a completed game")
-
-      active match {
-        case Some(p) if p != piece          => throw BadTurnError(s"must place the active piece: $active. actual piece placed: $piece")
-        case None if this != Quarto.newGame => throw BadTurnError(s"no active piece set for in progress game")
-        case _                              =>
+      Quarto.validateGame(this) match {
+        case Failure(f) => throw f
+        case Success(_) =>
       }
 
-      if (board.squares.contains(square))          throw BadTurnError(s"square $square is already occupied")
-      if (board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed") //TODO should never trigger if forOpponent is checked for
-
-      forOpponent match {
-        case Some(p) if board.squares.values.exists(_ == p) &&
-                        !Quarto.willWin(this, piece, square)    => throw BadTurnError(s"piece for opponent $p has already been placed")
-        case Some(p) if p == piece                              => throw BadTurnError(s"piece being placed and piece for opponent are the same: $p")
-        case None    if !Quarto.willWin(this, piece, square) &&
-                        !isLastTurn                             => throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
-        case _                                                  =>
+      Quarto.validateTurn(this, piece, square, forOpponent) match {
+        case Failure(f) => throw f
+        case Success(_) =>
       }
 
       forOpponent match {
         case Some(p) if board.squares.values.exists(_ == p) &&
-                     Quarto.willWin(this, piece, square)    => Quarto(Board(board.squares + (square -> piece)), None)
-        case _                                              => Quarto(Board(board.squares + (square -> piece)), forOpponent)
+                        Quarto.willWin(this, piece, square)    => Quarto(Board(board.squares + (square -> piece)), None)
+        case _                                                 => Quarto(Board(board.squares + (square -> piece)), forOpponent)
       }
     })
   }
@@ -76,6 +65,35 @@ case object Quarto{
 
   def willWin(game: Quarto, piece: Piece, square: Square): Boolean = {
     Quarto.isWon(Quarto(Board(game.board.squares + (square -> piece)), None))
+  }
+
+  def validateGame(game: Quarto): Try[Unit] = {
+    Try({
+      if (!game.isValid)      throw InvalidGameError("not a valid game")
+      if (Quarto.isWon(game)) throw InvalidGameError("cannot take a turn on a completed game")
+
+      game.active match {
+        case None if game != Quarto.newGame => throw InvalidGameError(s"no active piece set for in progress game")
+        case _                              => Unit
+      }
+    })
+  }
+
+  def validateTurn(game: Quarto, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Unit] = {
+    Try({
+      if (game.board.squares.contains(square))          throw BadTurnError(s"square $square is already occupied")
+      if (game.board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed") //TODO should never trigger if forOpponent is checked for
+
+      (forOpponent, game.active) match {
+        case (Some(p),_) if game.board.squares.values.exists(_ == p) &&
+                        !Quarto.willWin(game, piece, square)    => throw BadTurnError(s"piece for opponent $p has already been placed")
+        case (Some(p),_) if p == piece                          => throw BadTurnError(s"piece being placed and piece for opponent are the same: $p")
+        case (None,_)    if !Quarto.willWin(game, piece, square) &&
+                        !game.isLastTurn                        => throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
+        case (_, Some(p)) if p != piece                         => throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
+        case _                                                  => Unit
+      }
+    })
   }
 
 }

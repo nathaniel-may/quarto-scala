@@ -249,7 +249,7 @@ class QuartoTest extends FlatSpec with Matchers {
     assert(!Board(squares).isValid)
   }
 
-  it should "reject board creation with out active if board is not new" in {
+  it should "reject board creation without active if board is not new" in {
     val squares = Map(Square(I1, I2) -> WLQF)
     val game = Quarto(Board(squares), None)
     assert(!game.isValid)
