@@ -98,45 +98,6 @@ case object Quarto{
 
 }
 
-sealed case class Board(squares: Map[Square, Piece]){
-  def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
-  def isFull: Boolean = squares.size >= 16
-  def isValid: Boolean = squares.foldLeft(true)({case (valid, (_, piece)) => valid && 1 >= squares.valuesIterator.count(_ == piece)})
-}
-
-case object Board { val newBoard = Board(Map()) }
-
-sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
-  val attrs = List(color, size, shape, top)
-  override def toString: String = "" + color + size + shape + top
-}
-
-sealed case class Square(h: Index, v: Index)
-
-sealed abstract class Index(i: Int)
-case object I0 extends Index(0)
-case object I1 extends Index(1)
-case object I2 extends Index(2)
-case object I3 extends Index(3)
-
-sealed trait Attribute
-
-trait Color extends Attribute
-case object White extends Color { override def toString = "W" }
-case object Black extends Color { override def toString = "B" }
-
-trait Size extends Attribute
-case object Large extends Size { override def toString = "L" }
-case object Small extends Size { override def toString = "S" }
-
-trait Shape extends Attribute
-case object Round extends Shape { override def toString = "R" }
-case object Square extends Shape { override def toString = "Q" }
-
-trait Top extends Attribute
-case object Flat extends Top { override def toString = "F" }
-case object Hole extends Top { override def toString = "H" }
-
 abstract class QuartoError(msg: String) extends Exception {
   override def toString: String = super.toString + s"\n$msg"
 }

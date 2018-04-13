@@ -157,8 +157,8 @@ class QuartoTest extends FlatSpec with Matchers {
       (BLQF, Square(I2, I2), Some(BSRH)))
     )
 
-    val squares = Map(Square(I1, I2) -> Piece(White, Large, Square, Flat),
-                      Square(I2, I2) -> Piece(Black, Large, Square, Flat)
+    val squares = Map(Square(I1, I2) -> Piece(White, Large, Squar, Flat),
+                      Square(I2, I2) -> Piece(Black, Large, Squar, Flat)
     )
 
     val q2 = Quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
@@ -257,28 +257,28 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   "a Quarto piece" should "be equal to a piece with the same attributes" in {
-    assert(WLQF == Piece(White, Large, Square, Flat))
+    assert(WLQF == Piece(White, Large, Squar, Flat))
   }
 
   it should "not be equal to a piece with different attributes" in {
-    assert(WLQF != Piece(Black, Large, Square, Flat))
+    assert(WLQF != Piece(Black, Large, Squar, Flat))
   }
 
   //piece declarations
-  val WLQF = Piece(White, Large, Square, Flat)
-  val WLQH = Piece(White, Large, Square, Hole)
+  val WLQF = Piece(White, Large, Squar, Flat)
+  val WLQH = Piece(White, Large, Squar, Hole)
   val WLRF = Piece(White, Large, Round, Flat)
   val WLRH = Piece(White, Large, Round, Hole)
-  val WSQF = Piece(White, Small, Square, Flat)
-  val WSQH = Piece(White, Small, Square, Hole)
+  val WSQF = Piece(White, Small, Squar, Flat)
+  val WSQH = Piece(White, Small, Squar, Hole)
   val WSRF = Piece(White, Small, Round, Flat)
   val WSRH = Piece(White, Small, Round, Hole)
-  val BLQF = Piece(Black, Large, Square, Flat)
-  val BLQH = Piece(Black, Large, Square, Hole)
+  val BLQF = Piece(Black, Large, Squar, Flat)
+  val BLQH = Piece(Black, Large, Squar, Hole)
   val BLRF = Piece(Black, Large, Round, Flat)
   val BLRH = Piece(Black, Large, Round, Hole)
-  val BSQF = Piece(Black, Small, Square, Flat)
-  val BSQH = Piece(Black, Small, Square, Hole)
+  val BSQF = Piece(Black, Small, Squar, Flat)
+  val BSQH = Piece(Black, Small, Squar, Hole)
   val BSRF = Piece(Black, Small, Round, Flat)
   val BSRH = Piece(Black, Small, Round, Hole)
 
