@@ -79,17 +79,13 @@ case object Quarto{
   def validateTurn(game: Quarto, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Unit] = {
     Try({
       if (game.board.squares.contains(square))          throw BadTurnError(s"square $square is already occupied")
-      if (game.board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed") //TODO should never trigger if forOpponent is checked for
-
-      (forOpponent, game.active) match {
-        case (Some(p),_) if game.board.squares.values.exists(_ == p) &&
-                        !Quarto.willWin(game, piece, square)    => throw BadTurnError(s"piece for opponent $p has already been placed")
-        case (Some(p),_) if p == piece                          => throw BadTurnError(s"piece being placed and piece for opponent are the same: $p")
-        case (None,_)    if !Quarto.willWin(game, piece, square) &&
-                        !game.isLastTurn                        => throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
-        case (_, Some(p)) if p != piece                         => throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
-        case _                                                  => Unit
-      }
+      if (game.board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed")
+      if (game.active.exists(p => p != piece)) throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
+      if (forOpponent.contains(piece)) throw BadTurnError("piece being placed and piece for opponent are the same")
+      if (forOpponent.exists(p => game.board.squares.values.exists(_ == p) && !Quarto.willWin(game, piece, square)))
+        throw BadTurnError("piece for opponent has already been placed")
+      if (forOpponent.isEmpty && !Quarto.willWin(game, piece, square) && !game.isLastTurn)
+        throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
     })
   }
 
