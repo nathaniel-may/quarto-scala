@@ -54,7 +54,7 @@ case object Quarto{
   }
 
   def winningLine(game: Quarto, line: List[Square]): Boolean = {
-    val pieces = line flatMap {piece => game.board.squares get piece}
+    val pieces = line flatMap {piece => game.board.squares.get(piece)}
     val attrCounts = pieces.foldLeft(Map[Attribute, Int]())((counts, piece) =>
       piece.attrs.foldLeft(counts)((m, attr) => m |+| Map(attr -> 1)))
     attrCounts.exists(4 <= _._2)
