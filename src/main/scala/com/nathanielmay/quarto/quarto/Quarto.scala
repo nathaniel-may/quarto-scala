@@ -18,11 +18,12 @@ case class Quarto(board: Board, active: Option[Piece]){
         case Success(_) =>
       }
 
-      forOpponent match {
-        case Some(p) if board.squares.values.exists(_ == p) &&
-                        Quarto.willWin(this, piece, square)    => Quarto(Board(board.squares + (square -> piece)), None)
-        case _                                                 => Quarto(Board(board.squares + (square -> piece)), forOpponent)
-      }
+      val next = Quarto(Board(board.squares + (square -> piece)), forOpponent)
+      forOpponent.map(p =>
+        if (board.squares.values.exists(_ == p) && Quarto.willWin(this, piece, square))
+          Quarto(Board(board.squares + (square -> piece)), None)
+        else next)
+        .getOrElse(next)
     })
   }
 
