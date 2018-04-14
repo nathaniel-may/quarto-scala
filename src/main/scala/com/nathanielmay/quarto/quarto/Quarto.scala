@@ -26,12 +26,8 @@ case class Quarto(board: Board, active: Option[Piece]){
     })
   }
 
-  def isValid: Boolean = {
-    board.isValid && (active match {
-      case Some(p) => !board.contains(p)
-      case None => board == Board.newBoard || Quarto.isWon(this) || board.isFull
-    })
-  }
+  def isValid: Boolean = board.isValid && active.map(p => !board.contains(p))
+                                                .getOrElse(board == Board.newBoard || Quarto.isWon(this) || board.isFull)
 
   def isLastTurn: Boolean = board.squares.size == 15
 }
