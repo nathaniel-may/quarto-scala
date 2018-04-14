@@ -68,11 +68,7 @@ case object Quarto{
     Try({
       if (!game.isValid)      throw InvalidGameError("not a valid game")
       if (Quarto.isWon(game)) throw InvalidGameError("cannot take a turn on a completed game")
-
-      game.active match {
-        case None if game != Quarto.newGame => throw InvalidGameError(s"no active piece set for in progress game")
-        case _                              => Unit
-      }
+      if (game.active.isEmpty && game != Quarto.newGame) throw InvalidGameError(s"no active piece set for in progress game")
     })
   }
 
