@@ -4,14 +4,14 @@ import scala.util.{Try, Failure, Success}
 
 case class Quarto(board: Board, active: Option[Piece]){
 
-  def takeTurn(piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
+  def takeTurn(player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
     Try({
       Quarto.validateGame(this) match {
         case Failure(f) => throw f
         case Success(_) =>
       }
 
-      Quarto.validateTurn(this, piece, square, forOpponent) match {
+      Quarto.validateTurn(this, player, piece, square, forOpponent) match {
         case Failure(f) => throw f
         case Success(_) =>
       }
@@ -42,9 +42,9 @@ case object Quarto{
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
-  def takeTurns(q0: => Quarto)(turns: List[(Piece, Square, Option[Piece])]) : Try[Quarto] =
-    turns.foldLeft(Try(q0)) { case (game, (piece, square, active)) =>
-      game flatMap (_.takeTurn(piece, square, active))
+  def takeTurns(q0: => Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]) : Try[Quarto] =
+    turns.foldLeft(Try(q0)) { case (game, (player, piece, square, active)) =>
+      game flatMap (_.takeTurn(player, piece, square, active))
     }
 
   def isWon(game: Quarto): Boolean = {
@@ -71,12 +71,13 @@ case object Quarto{
     })
   }
 
-  def validateTurn(game: Quarto, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Unit] = {
+  def validateTurn(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Unit] = {
     Try({
-      if (game.board.squares.contains(square))          throw BadTurnError(s"square $square is already occupied")
-      if (game.board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed")
-      if (game.active.exists(p => p != piece))          throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
-      if (forOpponent.contains(piece))                  throw BadTurnError("piece being placed and piece for opponent are the same")
+      if (game.board.squares.size % 2 + 1 != player.num) throw BadTurnError(s"it is not player ${player.num}'s turn")
+      if (game.board.squares.contains(square))           throw BadTurnError(s"square $square is already occupied")
+      if (game.board.squares.values.exists(_ == piece))  throw BadTurnError(s"piece $piece has already been placed")
+      if (game.active.exists(p => p != piece))           throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
+      if (forOpponent.contains(piece))                   throw BadTurnError("piece being placed and piece for opponent are the same")
       if (forOpponent.exists(p => game.board.squares.values.exists(_ == p) && !Quarto.willWin(game, piece, square)))
         throw BadTurnError("piece for opponent has already been placed")
       if (forOpponent.isEmpty && !Quarto.willWin(game, piece, square) && !game.isLastTurn)
@@ -85,6 +86,13 @@ case object Quarto{
   }
 
 }
+
+//TODO make a turn type with error handling from validateTurn
+//TODO move validate game to constructor logic
+
+sealed abstract class Player(val num: Int)
+case object P1 extends Player(1)
+case object P2 extends Player(2)
 
 abstract class QuartoError(msg: String) extends Exception {
   override def toString: String = super.toString + s"\n$msg"
