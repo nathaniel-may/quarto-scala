@@ -1,57 +1,42 @@
 package com.nathanielmay.quarto.quarto
 
-import scala.util.{Try, Failure, Success}
-
 case class Quarto(board: Board, active: Option[Piece]){
-
-  def takeTurn(player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
-    Try({
-      Quarto.validateGame(this) match {
-        case Failure(f) => throw f
-        case Success(_) =>
-      }
-
-      Quarto.validateTurn(this, player, piece, square, forOpponent) match {
-        case Failure(f) => throw f
-        case Success(_) =>
-      }
-
-      val next = Quarto(Board(board.squares + (square -> piece)), forOpponent)
-      forOpponent.map(p =>
-        if (board.squares.values.exists(_ == p) && Quarto.isWon(next))
-          Quarto(Board(board.squares + (square -> piece)), None)
-        else next)
-        .getOrElse(next)
-    })
-  }
-
-  def isValid: Boolean = board.isValid && active.map(p => !board.contains(p))
-                                                .getOrElse(board == Board.newBoard || Quarto.isWon(this) || board.isFull)
+  require(Quarto.validActive(this), s"invalid active piece $active")
 
   def isLastTurn: Boolean = board.squares.size == 15
+  def isComplete: Boolean = Quarto.isWon(this) || board.isFull
+  def player: Player      = if (board.squares.size % 2 == 0) P1 else P2
 }
 
 case object Quarto{
-  val newGame = Quarto(Board.newBoard, None)
+  def apply(): Quarto = Quarto(Board(), None)
 
   private val indexes = List(I0, I1, I2, I3)
-  private val hLines = indexes.map(h => indexes.map(v => Square(h, v)))
-  private val vLines = indexes.map(v => indexes.map(h => Square(h, v)))
-  private val dLines = List(indexes zip indexes map {case (h, v) => Square(h, v)},
+  private val hLines  = indexes.map(h => indexes.map(v => Square(h, v)))
+  private val vLines  = indexes.map(v => indexes.map(h => Square(h, v)))
+  private val dLines  = List(indexes zip indexes map {case (h, v) => Square(h, v)},
                                         indexes zip indexes.reverse map {case (h, v) => Square(h, v)})
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
-  def takeTurns(q0: => Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]) : Try[Quarto] =
-    turns.foldLeft(Try(q0)) { case (game, (player, piece, square, active)) =>
-      game flatMap (_.takeTurn(player, piece, square, active))
-    }
+  def takeTurn(turn: Turn): Quarto = {
+    val next = Quarto(Board(turn.game.board.squares + (turn.square -> turn.piece)), turn.forOpponent)
+    turn.forOpponent.map(p =>
+      if (turn.game.board.squares.values.exists(_ == p) && Quarto.isWon(next))
+        Quarto(Board(turn.game.board.squares + (turn.square -> turn.piece)), None)
+      else next)
+      .getOrElse(next)
+  }
 
   def isWon(game: Quarto): Boolean = {
     allLines.exists(winningLine(game, _))
   }
 
-  def winningLine(game: Quarto, line: List[Square]): Boolean = {
+  def willWin(game: Quarto, piece: Piece, square: Square): Boolean = {
+    Quarto.isWon(Quarto(Board(game.board.squares + (square -> piece)), None))
+  }
+
+  private def winningLine(game: Quarto, line: List[Square]): Boolean = {
     val pieces = line flatMap {piece => game.board.squares.get(piece)}
     val attrCounts = pieces.foldLeft(Map[Attribute, Int]())((counts, piece) =>
       piece.attrs.foldLeft(counts)((m, attr) =>
@@ -59,36 +44,27 @@ case object Quarto{
     attrCounts.exists(4 <= _._2)
   }
 
-  def willWin(game: Quarto, piece: Piece, square: Square): Boolean = {
-    Quarto.isWon(Quarto(Board(game.board.squares + (square -> piece)), None))
-  }
-
-  def validateGame(game: Quarto): Try[Unit] = {
-    Try({
-      if (!game.isValid)                                 throw InvalidGameError("not a valid game")
-      if (Quarto.isWon(game))                            throw InvalidGameError("cannot take a turn on a completed game")
-      if (game.active.isEmpty && game != Quarto.newGame) throw InvalidGameError(s"no active piece set for in progress game")
-    })
-  }
-
-  def validateTurn(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Unit] = {
-    Try({
-      if (game.board.squares.size % 2 + 1 != player.num) throw BadTurnError(s"it is not player ${player.num}'s turn")
-      if (game.board.squares.contains(square))           throw BadTurnError(s"square $square is already occupied")
-      if (game.board.squares.values.exists(_ == piece))  throw BadTurnError(s"piece $piece has already been placed")
-      if (game.active.exists(p => p != piece))           throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
-      if (forOpponent.contains(piece))                   throw BadTurnError("piece being placed and piece for opponent are the same")
-      if (forOpponent.exists(p => game.board.squares.values.exists(_ == p) && !Quarto.willWin(game, piece, square)))
-        throw BadTurnError("piece for opponent has already been placed")
-      if (forOpponent.isEmpty && !Quarto.willWin(game, piece, square) && !game.isLastTurn)
-        throw BadTurnError(s"no piece chosen for opponent and game still has more turns")
-    })
+  private def validActive(game: Quarto): Boolean = {
+    game.active.map(p => !game.board.contains(p))
+               .getOrElse(game.board == Board() || Quarto.isWon(game) || game.board.isFull)
   }
 
 }
 
-//TODO make a turn type with error handling from validateTurn
-//TODO move validate game to constructor logic
+sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]) {
+  private val finalTurn        = game.isLastTurn || Quarto.willWin(game, piece, square)
+  private val validPiece       = game.active.map(p => p == piece && !game.board.contains(piece) && !forOpponent.contains(piece))
+                                            .getOrElse(game.active.isEmpty || finalTurn)
+  private val validForOpponent = forOpponent.map(p => (!game.board.contains(p) && p != piece) || finalTurn)
+                                            .getOrElse(game.isLastTurn || Quarto.willWin(game, piece, square))
+
+
+  require(player == game.player,        s"it is not player ${player.num}'s turn")
+  require(!game.board.contains(square), s"square $square is already occupied")
+  require(validPiece,                   s"piece is an illegal piece to place")
+  require(validForOpponent,             s"invalid piece $forOpponent chosen for a non-final turn. Turns: ${game.board.squares.size}") //TODO same
+  require(!game.isComplete,             s"cannot take a turn on a completed game. Turns: ${game.board.squares.size}") //TODO remove turn num
+}
 
 sealed abstract class Player(val num: Int)
 case object P1 extends Player(1)

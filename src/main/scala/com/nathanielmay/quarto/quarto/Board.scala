@@ -1,12 +1,17 @@
 package com.nathanielmay.quarto.quarto
 
 sealed case class Board(squares: Map[Square, Piece]){
-  def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
-  def isFull: Boolean = squares.size >= 16
-  def isValid: Boolean = squares.foldLeft(true)({case (valid, (_, piece)) => valid && 1 >= squares.valuesIterator.count(_ == piece)})
+  require(!duplicateValues(squares), "map has values that appear more than once")
+
+  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.foldLeft(false)({case (dupsExist, (_, v)) => dupsExist || 1 < m.valuesIterator.count(_ == v)})
+  def isFull: Boolean               = squares.size >= 16
+  def contains(sq: Square): Boolean = squares.contains(sq)
+  def contains(p: Piece): Boolean   = squares.valuesIterator.contains(p)
 }
 
-case object Board { val newBoard = Board(Map()) }
+object Board{
+  def apply(): Board = new Board(Map())
+}
 
 sealed case class Square(h: Index, v: Index)
 

@@ -1,11 +1,7 @@
 import org.scalatest._
-import org.scalatest.TryValues._
-import scala.reflect._
 import com.nathanielmay.quarto.quarto._
 
-import scala.util.{Failure, Success}
-
-object QuartoTest {
+class QuartoTest extends FlatSpec with Matchers {
 
   def assertWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
     assert(turnsWon(turns))
@@ -15,50 +11,42 @@ object QuartoTest {
     assert(!turnsWon(turns))
   }
 
-  def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean = {
-    Quarto.takeTurns(Quarto.newGame)(turns) match {
-      case Success(q) => Quarto.isWon(q)
-      case Failure(_) => false
-    }
-  }
+  def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean = Quarto.isWon(takeTurns(Quarto())(turns))
 
-  def assertException[E <: Exception : ClassTag](turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
-    assert(Quarto.takeTurns(Quarto.newGame)(turns) match {
-      case Failure(_: E) => true
-      case x => false
+  def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]): Quarto = {
+    turns.foldLeft(q0)({case (game, (player, piece, square, forOpponent)) =>
+      Quarto.takeTurn(Turn(game, player, piece, square, forOpponent))
     })
   }
 
-}
-
-class QuartoTest extends FlatSpec with Matchers {
-
   "a Quarto game" should "reject turn when active and toPlace are the same" in {
-    Quarto.newGame
-      .takeTurn(P1, WLQF, Square(I0, I0), Some(WLQF)).failure.exception shouldBe a [BadTurnError]
+    intercept[Exception] {
+      Turn(Quarto(), P1, WLQF, Square(I0, I0), Some(WLQF))
+    }
   }
 
   it should "reject turn when active piece is already placed" in {
-    Quarto.takeTurns(Quarto.newGame)(List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I1, I0), Some(WLQF))
-    )).failure.exception shouldBe a [BadTurnError]
+    intercept[Exception] {
+      takeTurns(Quarto())(List(
+        (P1, WLQF, Square(I0, I0), Some(BLQF)),
+        (P2, BLQF, Square(I1, I0), Some(WLQF))
+      ))
+    }
   }
 
   it should "reject turn when square is occupied" in {
-    Quarto.takeTurns(Quarto.newGame)(List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I0, I0), Some(BSRH))
-    )).failure.exception shouldBe a [BadTurnError]
+    intercept[Exception] {
+      takeTurns(Quarto())(List(
+        (P1, WLQF, Square(I0, I0), Some(BLQF)),
+        (P2, BLQF, Square(I0, I0), Some(BSRH))
+      ))
+    }
   }
 
   it should "reject turn on invalid board" in {
-    val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)
-    assert(!Board(squares).isValid)
-
-    val game = Quarto(Board(squares), Some(BSRH))
-    assert(!game.isValid)
-    game.takeTurn(P1, BSRH, Square(I0,I0), Some(BLRH)).failure.exception shouldBe a [InvalidGameError]
+    intercept[Exception] {
+      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF))
+    }
   }
 
   it should "should be valid without active piece if game is won" in {
@@ -66,11 +54,12 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    assert(Quarto(Board(squares), None).isValid)
+    Quarto(Board(squares), None)
+    //TODO does this fail if an exception *is* thrown?
   }
 
-  it should "accept active piece for winning move" in {
-    QuartoTest.assertWin(List(
+  it should "accept valid active piece for winning move" in {
+    assertWin(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
@@ -79,7 +68,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "accept active piece of None for winning move" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
@@ -88,18 +77,18 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "accept invalid active piece for winning move but not save it" in {
-    Quarto.takeTurns(Quarto.newGame)(List(
+    takeTurns(Quarto())(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
       (P2, WLQH, Square(I0, I3), Some(WLQF)))
     ) should matchPattern {
-      case Success(game: Quarto) if Quarto.isWon(game) && game.active.isEmpty =>
+      case game: Quarto if Quarto.isWon(game) && game.active.isEmpty =>
     }
   }
 
   it should "accept when all pieces are played and the last piece wins" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, BLRF, Square(I1, I1), Some(BLRH)),
       (P2, BLRH, Square(I1, I3), Some(BLQF)),
       (P1, BLQF, Square(I0, I0), Some(BLQH)),
@@ -120,7 +109,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "accept when when all pieces are played and the last piece does not win" in {
-    QuartoTest.assertNoWin(List(
+    assertNoWin(List(
       (P1, BLRF, Square(I1, I1), Some(BLRH)),
       (P2, BLRH, Square(I1, I3), Some(BLQF)),
       (P1, BLQF, Square(I0, I0), Some(BLQH)),
@@ -132,7 +121,7 @@ class QuartoTest extends FlatSpec with Matchers {
       (P1, WLRF, Square(I3, I0), Some(WLRH)),
       (P2, WLRH, Square(I3, I1), Some(WLQF)),
       (P1, WLQF, Square(I3, I3), Some(WLQH)),
-      (P2, WLQH, Square(I1, I2), Some(WSRF)),
+      (P2, WLQH, Square(I1, I2), Some(WSRF)), //Says this is a winning move
       (P1, WSRF, Square(I2, I2), Some(WSRH)),
       (P2, WSRH, Square(I0, I2), Some(WSQF)),
       (P1, WSQF, Square(I2, I3), Some(WSQH)),
@@ -141,18 +130,20 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "reject when game is already won" in {
-    QuartoTest.assertException[InvalidGameError](List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I0, I1), Some(BLRH)),
-      (P1, BLRH, Square(I0, I2), Some(WLQH)),
-      (P2, WLQH, Square(I0, I3), None),
-      (P1, BSRH, Square(I0, I0), Some(WSQF)))
-    )
+    intercept[Exception] {
+      takeTurns(Quarto())(List(
+        (P1, WLQF, Square(I0, I0), Some(BLQF)),
+        (P2, BLQF, Square(I0, I1), Some(BLRH)),
+        (P1, BLRH, Square(I0, I2), Some(WLQH)),
+        (P2, WLQH, Square(I0, I3), None),
+        (P1, BSRH, Square(I0, I0), Some(WSQF)))
+      )
+    }
 
   }
 
   it should "be equal to a game from saved state" in {
-    val q1 = Quarto.takeTurns(Quarto.newGame)(List(
+    val q1 = takeTurns(Quarto())(List(
       (P1, WLQF, Square(I1, I2), Some(BLQF)),
       (P2, BLQF, Square(I2, I2), Some(BSRH)))
     )
@@ -163,10 +154,7 @@ class QuartoTest extends FlatSpec with Matchers {
 
     val q2 = Quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
 
-    q1 match {
-      case Success(game) => assert(game == q2)
-      case Failure(_) => fail()
-    }
+    assert(q1 == q2)
   }
 
   it should "should be valid without active piece if board is won" in {
@@ -174,11 +162,12 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    assert(Quarto(Board(squares), None).isValid)
+    Quarto(Board(squares), None)
+    //TODO does this catch if there is an exception
   }
 
   it should "recognize a horizontal win" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
@@ -188,7 +177,7 @@ class QuartoTest extends FlatSpec with Matchers {
 
 
   it should "recognize a vertical win" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I0, I2), Some(BLQF)),
       (P2, BLQF, Square(I1 ,I2), Some(BLRH)),
       (P1, BLRH, Square(I2, I2), Some(WLQH)),
@@ -197,7 +186,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "recognize a diagonal0 win" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I1, I1), Some(BLRH)),
       (P1, BLRH, Square(I2, I2), Some(WLQH)),
@@ -206,7 +195,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "recognize a diagonal1 win" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I3, I0), Some(BLQF)),
       (P2, BLQF, Square(I2, I1), Some(BLRH)),
       (P1, BLRH, Square(I1, I2), Some(WLQH)),
@@ -215,7 +204,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "recognize a multi-line win" in {
-    QuartoTest.assertWin(List(
+    assertWin(List(
       (P1, WLQF, Square(I0, I0), Some(BLQF)),
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(BSRH)),
@@ -229,31 +218,31 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "not recognize a new game as won" in {
-    assert(!Quarto.isWon(Quarto.newGame))
+    assert(!Quarto.isWon(Quarto()))
   }
 
   it should "not recognize a game with one placed piece as won" in {
-    QuartoTest.assertNoWin(List((P1, WLQF, Square(I1, I2), Some(BLQF))))
+    assertNoWin(List((P1, WLQF, Square(I1, I2), Some(BLQF))))
   }
 
-  //TODO illegal states are representable (board filled with one kind of piece etc)
+  //TODO this test is a quarto game test not a board
   "a Quarto board"  should "reject board creation with active that is already placed" in {
     val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> BSRH)
-    val game = Quarto(Board(squares), Some(WLQF))
-    assert(!game.isValid)
-    game.takeTurn(P1, WLRF, Square(I0,I0), Some(BLRH)).failure.exception shouldBe an [InvalidGameError]
+    intercept[Exception] {
+      Quarto(Board(squares), Some(WLQF))
+    }
   }
 
   it should "be invalid if the same piece is placed twice" in {
-    val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)
-    assert(!Board(squares).isValid)
+    intercept[Exception] {
+      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF))
+    }
   }
 
   it should "reject board creation without active if board is not new" in {
-    val squares = Map(Square(I1, I2) -> WLQF)
-    val game = Quarto(Board(squares), None)
-    assert(!game.isValid)
-    game.takeTurn(P1, WLRF, Square(I0,I0), Some(BLRH)).failure.exception shouldBe an [InvalidGameError]
+    intercept[Exception] {
+      Quarto(Board(Map(Square(I1, I2) -> WLQF)), None)
+    }
   }
 
   "a Quarto piece" should "be equal to a piece with the same attributes" in {
