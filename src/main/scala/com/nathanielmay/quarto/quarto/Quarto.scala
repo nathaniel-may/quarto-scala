@@ -18,7 +18,7 @@ case class Quarto(board: Board, active: Option[Piece]){
 
       val next = Quarto(Board(board.squares + (square -> piece)), forOpponent)
       forOpponent.map(p =>
-        if (board.squares.values.exists(_ == p) && Quarto.willWin(this, piece, square))
+        if (board.squares.values.exists(_ == p) && Quarto.isWon(next))
           Quarto(Board(board.squares + (square -> piece)), None)
         else next)
         .getOrElse(next)
@@ -65,8 +65,8 @@ case object Quarto{
 
   def validateGame(game: Quarto): Try[Unit] = {
     Try({
-      if (!game.isValid)      throw InvalidGameError("not a valid game")
-      if (Quarto.isWon(game)) throw InvalidGameError("cannot take a turn on a completed game")
+      if (!game.isValid)                                 throw InvalidGameError("not a valid game")
+      if (Quarto.isWon(game))                            throw InvalidGameError("cannot take a turn on a completed game")
       if (game.active.isEmpty && game != Quarto.newGame) throw InvalidGameError(s"no active piece set for in progress game")
     })
   }
@@ -75,8 +75,8 @@ case object Quarto{
     Try({
       if (game.board.squares.contains(square))          throw BadTurnError(s"square $square is already occupied")
       if (game.board.squares.values.exists(_ == piece)) throw BadTurnError(s"piece $piece has already been placed")
-      if (game.active.exists(p => p != piece)) throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
-      if (forOpponent.contains(piece)) throw BadTurnError("piece being placed and piece for opponent are the same")
+      if (game.active.exists(p => p != piece))          throw BadTurnError(s"must place the active piece: $game.active. actual piece placed: $piece")
+      if (forOpponent.contains(piece))                  throw BadTurnError("piece being placed and piece for opponent are the same")
       if (forOpponent.exists(p => game.board.squares.values.exists(_ == p) && !Quarto.willWin(game, piece, square)))
         throw BadTurnError("piece for opponent has already been placed")
       if (forOpponent.isEmpty && !Quarto.willWin(game, piece, square) && !game.isLastTurn)
