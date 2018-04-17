@@ -20,20 +20,15 @@ case object Quarto{
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
   def takeTurn(turn: Turn): Quarto = {
-    val next = Quarto(Board(turn.game.board.squares + (turn.square -> turn.piece)), turn.forOpponent)
+    val next = Quarto(turn.nextBoard, turn.forOpponent)
     turn.forOpponent.fold(next)(p =>
       if (turn.game.board.squares.values.exists(_ == p) && Quarto.isWon(next.board))
         Quarto(next.board, None)
       else next)
   }
 
-  //TODO make it take a board instead of game. fix all the things.
   def isWon(board: Board): Boolean = {
     allLines.exists(winningLine(board, _))
-  }
-
-  def willWin(game: Quarto, piece: Piece, square: Square): Boolean = {
-    Quarto.isWon(Board(game.board.squares + (square -> piece)))
   }
 
   private def winningLine(board: Board, line: List[Square]): Boolean = {
@@ -45,26 +40,28 @@ case object Quarto{
   }
 
   private def validActive(game: Quarto): Boolean = {
-    game.active.map(p => !game.board.contains(p) || Quarto.isWon(game.board))
-               .getOrElse(game.board == Board() || Quarto.isWon(game.board) || game.board.isFull)
+    game.active.fold(game.board == Board() || Quarto.isWon(game.board) || game.board.isFull)(p => !game.board.contains(p) || Quarto.isWon(game.board))
   }
 
 }
 
 sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]) {
-  private val finalTurn        = game.isLastTurn || Quarto.willWin(game, piece, square)
-  private val validPiece       = game.active.map(p => p == piece && !game.board.contains(piece) && !forOpponent.contains(piece))
-                                            .getOrElse(game.active.isEmpty || finalTurn)
-  private val validForOpponent = forOpponent.map(p => (!game.board.contains(p) && p != piece) || finalTurn)
-                                            .getOrElse(game.isLastTurn || Quarto.willWin(game, piece, square))
-
-
   require(player == game.player,        s"it is not player ${player.num}'s turn")
   require(!game.board.contains(square), s"square $square is already occupied")
-  //require(forOpponent.fold(game.active.fold(game == Quarto())())(), s"")
+  require(!game.isComplete,             s"cannot take a turn on a completed game")
+
+  private val newBoard         = Board(game.board.squares + (square -> piece))
+  private val willWin          = newBoard.fold(false)(b => Quarto.isWon(b))
+  private val finalTurn        = game.isLastTurn || willWin
+  private val validPiece       = game.active.fold(game.active.isEmpty || finalTurn)(p =>
+                                   p == piece && !game.board.contains(piece) && !forOpponent.contains(piece))
+  private val validForOpponent = forOpponent.fold(game.isLastTurn || willWin)(p =>
+                                   (!game.board.contains(p) && p != piece) || finalTurn)
+
   require(validPiece,                   s"piece is an illegal piece to place")
   require(validForOpponent,             s"invalid piece $forOpponent chosen for a non-final turn")
-  require(!game.isComplete,             s"cannot take a turn on a completed game")
+
+  val nextBoard: Board = newBoard.get //TODO avoid partial function get?
 }
 
 sealed abstract class Player(val num: Int)

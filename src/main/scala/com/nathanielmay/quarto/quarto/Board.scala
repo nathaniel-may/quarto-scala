@@ -1,9 +1,6 @@
 package com.nathanielmay.quarto.quarto
 
-sealed case class Board(squares: Map[Square, Piece] = Map()) {
-  require(!duplicateValues(squares), "map has values that appear more than once")
-
-  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.map({case (_, v) => (v, Unit)}).size < m.size
+sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 
   def isFull: Boolean = squares.size >= 16
 
@@ -19,6 +16,23 @@ sealed case class Board(squares: Map[Square, Piece] = Map()) {
       ).mkString("|","|","|")
     ).mkString("\n", "\n", "\n")
   }
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case obj: Board => squares == obj.squares
+    case _          => false
+  }
+}
+
+object Board{
+
+  def apply(squares: Map[Square, Piece]): Option[Board] = {
+    if (duplicateValues(squares)) None
+    else Board(squares)
+  }
+
+  def apply(): Board = new Board(Map())
+
+  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.map({case (_, v) => (v, Unit)}).size < m.size
 }
 
 sealed case class Square(h: Index, v: Index)
