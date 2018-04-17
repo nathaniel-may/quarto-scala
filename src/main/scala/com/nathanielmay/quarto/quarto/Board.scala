@@ -7,6 +7,12 @@ sealed case class Board(squares: Map[Square, Piece]){
   def isFull: Boolean               = squares.size >= 16
   def contains(sq: Square): Boolean = squares.contains(sq)
   def contains(p: Piece): Boolean   = squares.valuesIterator.contains(p)
+  override def toString: String = "\n|" + squares.foldLeft(Array.fill(16)("    "))({
+    case (arr, (sq, piece)) => arr.updated(sq.v.i + (sq.h.i * 4), piece.toString)
+  }).zipWithIndex.map({
+    case (str, i) if (i+1)%4 == 0 => str + "|\n"
+    case (str, _)                   => str
+  }).mkString("|")
 }
 
 object Board{
@@ -15,7 +21,7 @@ object Board{
 
 sealed case class Square(h: Index, v: Index)
 
-sealed abstract class Index(i: Int)
+sealed abstract class Index(val i: Int)
 case object I0 extends Index(0)
 case object I1 extends Index(1)
 case object I2 extends Index(2)

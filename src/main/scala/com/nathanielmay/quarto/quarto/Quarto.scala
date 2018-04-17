@@ -33,7 +33,12 @@ case object Quarto{
   }
 
   def willWin(game: Quarto, piece: Piece, square: Square): Boolean = {
-    Quarto.isWon(Quarto(Board(game.board.squares + (square -> piece)), None))
+    //TODO can I remove this try catch???
+    try {
+      Quarto.isWon(Quarto(Board(game.board.squares + (square -> piece)), None))
+    } catch {
+      case _: Throwable => false
+    }
   }
 
   private def winningLine(game: Quarto, line: List[Square]): Boolean = {
@@ -45,7 +50,7 @@ case object Quarto{
   }
 
   private def validActive(game: Quarto): Boolean = {
-    game.active.map(p => !game.board.contains(p))
+    game.active.map(p => !game.board.contains(p) || Quarto.isWon(game))
                .getOrElse(game.board == Board() || Quarto.isWon(game) || game.board.isFull)
   }
 
@@ -62,8 +67,8 @@ sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Squar
   require(player == game.player,        s"it is not player ${player.num}'s turn")
   require(!game.board.contains(square), s"square $square is already occupied")
   require(validPiece,                   s"piece is an illegal piece to place")
-  require(validForOpponent,             s"invalid piece $forOpponent chosen for a non-final turn. Turns: ${game.board.squares.size}") //TODO same
-  require(!game.isComplete,             s"cannot take a turn on a completed game. Turns: ${game.board.squares.size}") //TODO remove turn num
+  require(validForOpponent,             s"invalid piece $forOpponent chosen for a non-final turn")
+  require(!game.isComplete,             s"cannot take a turn on a completed game")
 }
 
 sealed abstract class Player(val num: Int)
