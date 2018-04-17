@@ -1,22 +1,25 @@
 package com.nathanielmay.quarto.quarto
 
-sealed case class Board(squares: Map[Square, Piece]){
+sealed case class Board(squares: Map[Square, Piece] = Map()) {
   require(!duplicateValues(squares), "map has values that appear more than once")
 
-  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.foldLeft(false)({case (dupsExist, (_, v)) => dupsExist || 1 < m.valuesIterator.count(_ == v)})
-  def isFull: Boolean               = squares.size >= 16
-  def contains(sq: Square): Boolean = squares.contains(sq)
-  def contains(p: Piece): Boolean   = squares.valuesIterator.contains(p)
-  override def toString: String = "\n|" + squares.foldLeft(Array.fill(16)("    "))({
-    case (arr, (sq, piece)) => arr.updated(sq.v.i + (sq.h.i * 4), piece.toString)
-  }).zipWithIndex.map({
-    case (str, i) if (i+1)%4 == 0 => str + "|\n"
-    case (str, _)                   => str
-  }).mkString("|")
-}
+  //TODO slow O(n^2)
+  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.exists({ case (_, v) => 1 < m.valuesIterator.count(_ == v) })
 
-object Board{
-  def apply(): Board = new Board(Map())
+  def isFull: Boolean = squares.size >= 16
+
+  def contains(sq: Square): Boolean = squares.contains(sq)
+
+  def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
+
+  override def toString: String = {
+    val indices = List(I0, I1, I2, I3)
+    indices.map(h =>
+      indices.map(v =>
+        squares.get(Square(h, v)).fold("    ")(_.toString)
+      ).mkString("|","|","|")
+    ).mkString("\n", "\n", "\n")
+  }
 }
 
 sealed case class Square(h: Index, v: Index)

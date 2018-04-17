@@ -11,7 +11,7 @@ class QuartoTest extends FlatSpec with Matchers {
     assert(!turnsWon(turns))
   }
 
-  def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean = Quarto.isWon(takeTurns(Quarto())(turns))
+  def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean = Quarto.isWon(takeTurns(Quarto())(turns).board)
 
   def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]): Quarto = {
     turns.foldLeft(q0)({case (game, (player, piece, square, forOpponent)) =>
@@ -109,7 +109,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "not recognize a new game as won" in {
-    assert(!Quarto.isWon(Quarto()))
+    assert(!Quarto.isWon(Quarto().board))
   }
 
   it should "not recognize a game with one placed piece as won" in {
@@ -165,7 +165,7 @@ class QuartoTest extends FlatSpec with Matchers {
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
       (P2, WLQH, Square(I0, I3), Some(WLQF)))
     ) should matchPattern {
-      case game: Quarto if Quarto.isWon(game) && game.active.isEmpty =>
+      case game: Quarto if Quarto.isWon(game.board) && game.active.isEmpty =>
     }
   }
 
