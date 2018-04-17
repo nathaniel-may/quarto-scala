@@ -3,8 +3,7 @@ package com.nathanielmay.quarto.quarto
 sealed case class Board(squares: Map[Square, Piece] = Map()) {
   require(!duplicateValues(squares), "map has values that appear more than once")
 
-  //TODO slow O(n^2)
-  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.exists({ case (_, v) => 1 < m.valuesIterator.count(_ == v) })
+  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.map({case (_, v) => (v, Unit)}).size < m.size
 
   def isFull: Boolean = squares.size >= 16
 

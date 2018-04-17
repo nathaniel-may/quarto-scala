@@ -5,7 +5,6 @@ sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   override def toString: String = "" + color + size + shape + top
 }
 
-// TODO is the common superclass necessary?
 sealed trait Attribute
 
 trait Color extends Attribute
