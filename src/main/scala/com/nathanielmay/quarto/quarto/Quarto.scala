@@ -51,17 +51,20 @@ sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Squar
   require(!game.isComplete,             s"cannot take a turn on a completed game")
 
   private val newBoard         = Board(game.board.squares + (square -> piece))
+
+  require(newBoard.fold(false)(_ => true), "piece would create an invalid board"
+
   private val willWin          = newBoard.fold(false)(b => Quarto.isWon(b))
   private val finalTurn        = game.isLastTurn || willWin
   private val validPiece       = game.active.fold(game.active.isEmpty || finalTurn)(p =>
-                                   p == piece && !game.board.contains(piece) && !forOpponent.contains(piece))
+                                   p == piece && !forOpponent.contains(piece))
   private val validForOpponent = forOpponent.fold(game.isLastTurn || willWin)(p =>
                                    (!game.board.contains(p) && p != piece) || finalTurn)
 
   require(validPiece,                   s"piece is an illegal piece to place")
   require(validForOpponent,             s"invalid piece $forOpponent chosen for a non-final turn")
 
-  val nextBoard: Board = newBoard.get //TODO avoid partial function get?
+  val nextBoard: Board = newBoard.get
 }
 
 sealed abstract class Player(val num: Int)

@@ -19,7 +19,6 @@ class QuartoTest extends FlatSpec with Matchers {
     })
   }
 
-  //TODO remove partial function get?
   "a Quarto game"  should "reject with active that is already placed" in {
     val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> BSRH)
     intercept[Exception] {
@@ -244,7 +243,7 @@ class QuartoTest extends FlatSpec with Matchers {
     assert(WLQF != Piece(Black, Large, Squar, Flat))
   }
 
-  //piece declarations TODO how to fix squar vs square name collision???
+  //piece declarations TODO fix squar vs square name collision
   val WLQF = Piece(White, Large, Squar, Flat)
   val WLQH = Piece(White, Large, Squar, Hole)
   val WLRF = Piece(White, Large, Round, Flat)
