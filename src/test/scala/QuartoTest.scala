@@ -1,5 +1,7 @@
-import org.scalatest._
-import com.nathanielmay.quarto.quarto._
+import com.nathanielmay.quarto.{Player, P1, P2, Board, Square, I0, I1, I2, I3, Quarto, Turn}
+import com.nathanielmay.quarto.piece.{Piece, Black, White, Large, Small, Square => Sq, Round, Flat, Hole}
+import org.scalatest.{FlatSpec, Matchers}
+
 
 class QuartoTest extends FlatSpec with Matchers {
 
@@ -46,8 +48,8 @@ class QuartoTest extends FlatSpec with Matchers {
       (P2, BLQF, Square(I2, I2), Some(BSRH)))
     )
 
-    val squares = Map(Square(I1, I2) -> Piece(White, Large, Squar, Flat),
-      Square(I2, I2) -> Piece(Black, Large, Squar, Flat)
+    val squares = Map(Square(I1, I2) -> Piece(White, Large, Sq, Flat),
+      Square(I2, I2) -> Piece(Black, Large, Sq, Flat)
     )
 
     val q2 = Quarto(Board(squares).getOrElse(fail()), Some(Piece(Black, Small, Round, Hole)))
@@ -230,34 +232,31 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   "a Quarto board" should "be invalid if the same piece is placed twice" in {
-    intercept[Exception] {
-      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF))
-    }
+      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)).fold()(fail())
   }
 
   "a Quarto piece" should "be equal to a piece with the same attributes" in {
-    assert(WLQF == Piece(White, Large, Squar, Flat))
+    assert(WLQF == Piece(White, Large, Sq, Flat))
   }
 
   it should "not be equal to a piece with different attributes" in {
-    assert(WLQF != Piece(Black, Large, Squar, Flat))
+    assert(WLQF != Piece(Black, Large, Sq, Flat))
   }
 
-  //piece declarations TODO fix squar vs square name collision
-  val WLQF = Piece(White, Large, Squar, Flat)
-  val WLQH = Piece(White, Large, Squar, Hole)
+  val WLQF = Piece(White, Large, Sq,    Flat)
+  val WLQH = Piece(White, Large, Sq,    Hole)
   val WLRF = Piece(White, Large, Round, Flat)
   val WLRH = Piece(White, Large, Round, Hole)
-  val WSQF = Piece(White, Small, Squar, Flat)
-  val WSQH = Piece(White, Small, Squar, Hole)
+  val WSQF = Piece(White, Small, Sq,    Flat)
+  val WSQH = Piece(White, Small, Sq,    Hole)
   val WSRF = Piece(White, Small, Round, Flat)
   val WSRH = Piece(White, Small, Round, Hole)
-  val BLQF = Piece(Black, Large, Squar, Flat)
-  val BLQH = Piece(Black, Large, Squar, Hole)
+  val BLQF = Piece(Black, Large, Sq,    Flat)
+  val BLQH = Piece(Black, Large, Sq,    Hole)
   val BLRF = Piece(Black, Large, Round, Flat)
   val BLRH = Piece(Black, Large, Round, Hole)
-  val BSQF = Piece(Black, Small, Squar, Flat)
-  val BSQH = Piece(Black, Small, Squar, Hole)
+  val BSQF = Piece(Black, Small, Sq,    Flat)
+  val BSQH = Piece(Black, Small, Sq,    Hole)
   val BSRF = Piece(Black, Small, Round, Flat)
   val BSRH = Piece(Black, Small, Round, Hole)
 

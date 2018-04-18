@@ -1,4 +1,6 @@
-package com.nathanielmay.quarto.quarto
+package com.nathanielmay.quarto
+
+import com.nathanielmay.quarto.piece.Piece
 
 sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 
@@ -25,6 +27,7 @@ sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 
 object Board{
 
+  //TODO reverse board twice instead of option type
   def apply(squares: Map[Square, Piece]): Option[Board] = {
     if (duplicateValues(squares)) None else Some(new Board(squares))
   }

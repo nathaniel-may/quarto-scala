@@ -1,4 +1,4 @@
-package com.nathanielmay.quarto.quarto
+package com.nathanielmay.quarto.piece
 
 sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   val attrs = List(color, size, shape, top)
@@ -17,7 +17,7 @@ case object Small extends Size { override def toString = "S" }
 
 trait Shape extends Attribute
 case object Round extends Shape { override def toString = "R" }
-case object Squar extends Shape { override def toString = "Q" }
+case object Square extends Shape { override def toString = "Q" }
 
 trait Top extends Attribute
 case object Flat extends Top { override def toString = "F" }

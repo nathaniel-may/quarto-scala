@@ -1,4 +1,6 @@
-package com.nathanielmay.quarto.quarto
+package com.nathanielmay.quarto
+
+import com.nathanielmay.quarto.piece.{Attribute, Piece}
 
 case class Quarto(board: Board, active: Option[Piece]){
   require(Quarto.validActive(this), s"invalid active piece $active")
@@ -52,7 +54,7 @@ sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Squar
 
   private val newBoard         = Board(game.board.squares + (square -> piece))
 
-  require(newBoard.fold(false)(_ => true), "piece would create an invalid board"
+  require(newBoard.fold(false)(_ => true), "piece would create an invalid board")
 
   private val willWin          = newBoard.fold(false)(b => Quarto.isWon(b))
   private val finalTurn        = game.isLastTurn || willWin
