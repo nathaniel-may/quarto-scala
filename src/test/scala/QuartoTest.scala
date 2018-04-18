@@ -24,7 +24,7 @@ class QuartoTest extends FlatSpec with Matchers {
   "a Quarto game"  should "reject with active that is already placed" in {
     val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> BSRH)
     intercept[Exception] {
-      Quarto(Board(squares).getOrElse(fail()), Some(WLQF))
+      Quarto(Board(squares), Some(WLQF))
     }
   }
 
@@ -33,12 +33,12 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    Quarto(Board(squares).getOrElse(fail()), None)
+    Quarto(Board(squares), None)
   }
 
   it should "reject game creation without active if board is not new" in {
     intercept[Exception] {
-      Quarto(Board(Map(Square(I1, I2) -> WLQF)).getOrElse(fail()), None)
+      Quarto(Board(Map(Square(I1, I2) -> WLQF)), None)
     }
   }
 
@@ -52,7 +52,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I2, I2) -> Piece(Black, Large, Sq, Flat)
     )
 
-    val q2 = Quarto(Board(squares).getOrElse(fail()), Some(Piece(Black, Small, Round, Hole)))
+    val q2 = Quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
 
     assert(q1 == q2)
   }
@@ -62,7 +62,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    Quarto(Board(squares).getOrElse(fail()), None)
+    Quarto(Board(squares), None)
   }
 
   it should "recognize a horizontal win" in {
@@ -231,8 +231,8 @@ class QuartoTest extends FlatSpec with Matchers {
     }
   }
 
-  "a Quarto board" should "be invalid if the same piece is placed twice" in {
-      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)).fold()(fail())
+  "a Quarto board" should "remove duplicates if piece is placed twice" in {
+      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)).squares.size shouldBe 1
   }
 
   "a Quarto piece" should "be equal to a piece with the same attributes" in {

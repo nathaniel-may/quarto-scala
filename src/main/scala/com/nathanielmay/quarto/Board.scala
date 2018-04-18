@@ -27,14 +27,13 @@ sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 
 object Board{
 
-  //TODO reverse board twice instead of option type
-  def apply(squares: Map[Square, Piece]): Option[Board] = {
-    if (duplicateValues(squares)) None else Some(new Board(squares))
+  def apply(squares: Map[Square, Piece]): Board = {
+    new Board(reverse(reverse(squares)))
   }
 
   def apply(): Board = new Board(Map())
 
-  private def duplicateValues[K, V](m: Map[K, V]): Boolean = m.map({case (_, v) => (v, Unit)}).size < m.size
+  private def reverse[K, V](m: Map[K, V]): Map[V, K] = m.map({case (k, v) => (v, k)})
 }
 
 sealed case class Square(h: Index, v: Index)
