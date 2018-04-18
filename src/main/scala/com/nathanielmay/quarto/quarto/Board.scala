@@ -26,8 +26,7 @@ sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 object Board{
 
   def apply(squares: Map[Square, Piece]): Option[Board] = {
-    if (duplicateValues(squares)) None
-    else Board(squares)
+    if (duplicateValues(squares)) None else Some(new Board(squares))
   }
 
   def apply(): Board = new Board(Map())
