@@ -28,11 +28,7 @@ sealed case class Board(squares: Map[Square, Piece] = Map()) {
       ).mkString("|","|","|")
     ).mkString("\n", "\n", "\n")
   }
-
-  override def equals(obj: scala.Any): Boolean = obj match {
-    case obj: Board => squares == obj.squares
-    case _          => false
-  }
+  
 }
 
 /** Square on the board
