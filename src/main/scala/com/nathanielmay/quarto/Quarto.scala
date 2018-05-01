@@ -67,9 +67,3 @@ sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Squar
 sealed abstract class Player(val num: Int)
 case object P1 extends Player(1)
 case object P2 extends Player(2)
-
-abstract class QuartoError(msg: String) extends Exception {
-  override def toString: String = super.toString + s"\n$msg"
-}
-case class BadTurnError(msg: String) extends QuartoError(msg)
-case class InvalidGameError(msg: String) extends QuartoError(msg)
