@@ -2,14 +2,6 @@ package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.piece.{Attribute, Piece}
 
-case class Quarto(board: Board, active: Option[Piece]){
-  require(Quarto.validActive(this), s"invalid active piece $active")
-
-  def isLastTurn: Boolean = board.squares.size == 15
-  def isComplete: Boolean = Quarto.isWon(board) || board.isFull
-  def player:     Player  = if (board.squares.size % 2 == 0) P1 else P2
-}
-
 case object Quarto{
   def apply(): Quarto = Quarto(Board(), None)
 
@@ -17,7 +9,7 @@ case object Quarto{
   private val hLines  = indexes.map(h => indexes.map(v => Square(h, v)))
   private val vLines  = indexes.map(v => indexes.map(h => Square(h, v)))
   private val dLines  = List(indexes.zip(indexes).map({case (h, v) => Square(h, v)}),
-                             indexes.zip(indexes.reverse).map({case (h, v) => Square(h, v)}))
+    indexes.zip(indexes.reverse).map({case (h, v) => Square(h, v)}))
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
@@ -45,6 +37,14 @@ case object Quarto{
     game.active.fold(game.board == Board() || Quarto.isWon(game.board) || game.board.isFull)(p => !game.board.contains(p) || Quarto.isWon(game.board))
   }
 
+}
+
+case class Quarto(board: Board, active: Option[Piece]){
+  require(Quarto.validActive(this), s"invalid active piece $active")
+
+  def isLastTurn: Boolean = board.squares.size == 15
+  def isComplete: Boolean = Quarto.isWon(board) || board.isFull
+  def player:     Player  = if (board.squares.size % 2 == 0) P1 else P2
 }
 
 sealed case class Turn(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]) {

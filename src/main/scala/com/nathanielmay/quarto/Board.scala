@@ -2,6 +2,14 @@ package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.piece.Piece
 
+object Board{
+
+  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
+    m.map({case (_, v) => (v, Unit)}).size == m.size
+  }
+
+}
+
 sealed case class Board (squares: Map[Square, Piece] = Map()) {
   require(Board.noDuplicatePieces(squares) , "the given map has two different squares with identical pieces")
 
@@ -24,14 +32,6 @@ sealed case class Board (squares: Map[Square, Piece] = Map()) {
     case obj: Board => squares == obj.squares
     case _          => false
   }
-}
-
-object Board{
-
-  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
-    m.map({case (_, v) => (v, Unit)}).size == m.size
-  }
-
 }
 
 sealed case class Square(h: Index, v: Index)
