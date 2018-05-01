@@ -9,7 +9,7 @@ case object Quarto{
   private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Square(h, v)))
   private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Square(h, v)))
   private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => board.Square(h, v)}),
-    Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Square(h, v)}))
+                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Square(h, v)}))
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
@@ -26,7 +26,7 @@ case object Quarto{
   }
 
   private def winningLine(board: Board, line: List[Square]): Boolean = {
-    val pieces = line.flatMap(piece => board.squares.get(piece))
+    val pieces     = line.flatMap(piece => board.squares.get(piece))
     val attrCounts = pieces.foldLeft(Map[Attribute, Int]())((counts, piece) =>
       piece.attrs.foldLeft(counts)((m, attr) =>
         m.updated(attr, m.getOrElse(attr, 0) + 1)))
