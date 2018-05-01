@@ -1,8 +1,9 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.piece.{Piece, White, Black, Large, Small, Round, Square => Sq, Flat, Hole}
+import com.nathanielmay.quarto.board.{Board, Square, I0, I1, I2, I3}
+import com.nathanielmay.quarto.piece.{Black, Flat, Hole, Large, Piece, Round, Small, White, Square => Sq}
 import testingUtil.Pieces._
-import testingUtil.Util.{takeTurns, assertWin, assertNoWin}
+import testingUtil.Util.{assertNoWin, assertWin, takeTurns}
 import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
@@ -19,7 +20,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    Quarto(Board(squares), None)
+    Quarto(board.Board(squares), None)
   }
 
   it should "reject game creation without active if board is not new" in {
@@ -38,7 +39,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I2, I2) -> Piece(Black, Large, Sq, Flat)
     )
 
-    val q2 = Quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
+    val q2 = Quarto(board.Board(squares), Some(Piece(Black, Small, Round, Hole)))
 
     assert(q1 == q2)
   }
@@ -48,7 +49,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    Quarto(Board(squares), None)
+    Quarto(board.Board(squares), None)
   }
 
   it should "recognize a horizontal win" in {

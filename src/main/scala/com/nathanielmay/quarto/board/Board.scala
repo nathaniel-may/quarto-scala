@@ -1,4 +1,4 @@
-package com.nathanielmay.quarto
+package com.nathanielmay.quarto.board
 
 import com.nathanielmay.quarto.piece.Piece
 

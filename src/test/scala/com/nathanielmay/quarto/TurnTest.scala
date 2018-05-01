@@ -1,7 +1,8 @@
 package com.nathanielmay.quarto
 
+import com.nathanielmay.quarto.board.{Square, I0, I1, I2, I3}
 import testingUtil.Pieces._
-import testingUtil.Util.{takeTurns, assertWin, assertNoWin}
+import testingUtil.Util.{assertNoWin, assertWin, takeTurns}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TurnTest extends FlatSpec with Matchers {

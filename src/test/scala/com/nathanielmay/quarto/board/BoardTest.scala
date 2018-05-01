@@ -1,7 +1,7 @@
-package com.nathanielmay.quarto
+package com.nathanielmay.quarto.board
 
-import testingUtil.Pieces.WLQF
 import org.scalatest.{FlatSpec, Matchers}
+import testingUtil.Pieces.WLQF
 
 class BoardTest extends FlatSpec with Matchers{
 

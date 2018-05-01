@@ -1,5 +1,6 @@
 package com.nathanielmay.quarto
 
+import com.nathanielmay.quarto.board.{Board, Square, I0, I1, I2, I3}
 import com.nathanielmay.quarto.piece.{Attribute, Piece}
 
 case object Quarto{
@@ -8,8 +9,8 @@ case object Quarto{
   private val indexes = List(I0, I1, I2, I3)
   private val hLines  = indexes.map(h => indexes.map(v => Square(h, v)))
   private val vLines  = indexes.map(v => indexes.map(h => Square(h, v)))
-  private val dLines  = List(indexes.zip(indexes).map({case (h, v) => Square(h, v)}),
-    indexes.zip(indexes.reverse).map({case (h, v) => Square(h, v)}))
+  private val dLines  = List(indexes.zip(indexes).map({case (h, v) => board.Square(h, v)}),
+    indexes.zip(indexes.reverse).map({case (h, v) => board.Square(h, v)}))
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 

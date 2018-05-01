@@ -1,7 +1,8 @@
 package testingUtil
 
+import com.nathanielmay.quarto.board.Square
 import com.nathanielmay.quarto.piece.Piece
-import com.nathanielmay.quarto.{Quarto, Turn, Player, Square}
+import com.nathanielmay.quarto.{Player, Quarto, Turn}
 
 object Util {
 
