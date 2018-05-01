@@ -5,8 +5,10 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class BoardTest extends FlatSpec with Matchers{
 
-  "a Quarto board" should "remove duplicates if piece is placed twice" in {
-    Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF)).squares.size shouldBe 1
+  "a Quarto board" should "reject if piece is placed twice" in {
+    intercept[Exception] {
+      Board(Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> WLQF))
+    }
   }
 
 }

@@ -2,7 +2,8 @@ package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.piece.Piece
 
-sealed class Board private (val squares: Map[Square, Piece] = Map()) {
+sealed case class Board (squares: Map[Square, Piece] = Map()) {
+  require(Board.noDuplicatePieces(squares) , "the given map has two different squares with identical pieces")
 
   def isFull: Boolean = squares.size >= 16
 
@@ -27,13 +28,10 @@ sealed class Board private (val squares: Map[Square, Piece] = Map()) {
 
 object Board{
 
-  def apply(squares: Map[Square, Piece]): Board = {
-    new Board(reverse(reverse(squares)))
+  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
+    m.map({case (_, v) => (v, Unit)}).size == m.size
   }
 
-  def apply(): Board = new Board(Map())
-
-  private def reverse[K, V](m: Map[K, V]): Map[V, K] = m.map({case (k, v) => (v, k)})
 }
 
 sealed case class Square(h: Index, v: Index)
