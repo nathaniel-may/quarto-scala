@@ -6,11 +6,10 @@ import com.nathanielmay.quarto.piece.{Attribute, Piece}
 case object Quarto{
   def apply(): Quarto = Quarto(Board(), None)
 
-  private val indexes = List(I0, I1, I2, I3)
-  private val hLines  = indexes.map(h => indexes.map(v => Square(h, v)))
-  private val vLines  = indexes.map(v => indexes.map(h => Square(h, v)))
-  private val dLines  = List(indexes.zip(indexes).map({case (h, v) => board.Square(h, v)}),
-    indexes.zip(indexes.reverse).map({case (h, v) => board.Square(h, v)}))
+  private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Square(h, v)))
+  private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Square(h, v)))
+  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => board.Square(h, v)}),
+    Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Square(h, v)}))
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 

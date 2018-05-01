@@ -4,13 +4,15 @@ import com.nathanielmay.quarto.piece.Piece
 
 object Board{
 
+  val indexes: List[Index] = List(I0, I1, I2, I3)
+
   private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
     m.map({case (_, v) => (v, Unit)}).size == m.size
   }
 
 }
 
-sealed case class Board (squares: Map[Square, Piece] = Map()) {
+sealed case class Board(squares: Map[Square, Piece] = Map()) {
   require(Board.noDuplicatePieces(squares) , "the given map has two different squares with identical pieces")
 
   def isFull: Boolean = squares.size >= 16
@@ -20,9 +22,8 @@ sealed case class Board (squares: Map[Square, Piece] = Map()) {
   def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
 
   override def toString: String = {
-    val indices = List(I0, I1, I2, I3)
-    indices.map(h =>
-      indices.map(v =>
+    Board.indexes.map(h =>
+      Board.indexes.map(v =>
         squares.get(Square(h, v)).fold("    ")(_.toString)
       ).mkString("|","|","|")
     ).mkString("\n", "\n", "\n")
