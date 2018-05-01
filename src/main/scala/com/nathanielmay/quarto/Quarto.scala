@@ -1,6 +1,6 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.board.{Board, Square, I0, I1, I2, I3}
+import com.nathanielmay.quarto.board.{Board, Square}
 import com.nathanielmay.quarto.piece.{Attribute, Piece}
 
 case object Quarto{
