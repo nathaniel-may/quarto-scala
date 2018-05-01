@@ -5,6 +5,23 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
 
+  val WLQF = Piece(White, Large, Sq,    Flat)
+  val WLQH = Piece(White, Large, Sq,    Hole)
+  val WLRF = Piece(White, Large, Round, Flat)
+  val WLRH = Piece(White, Large, Round, Hole)
+  val WSQF = Piece(White, Small, Sq,    Flat)
+  val WSQH = Piece(White, Small, Sq,    Hole)
+  val WSRF = Piece(White, Small, Round, Flat)
+  val WSRH = Piece(White, Small, Round, Hole)
+  val BLQF = Piece(Black, Large, Sq,    Flat)
+  val BLQH = Piece(Black, Large, Sq,    Hole)
+  val BLRF = Piece(Black, Large, Round, Flat)
+  val BLRH = Piece(Black, Large, Round, Hole)
+  val BSQF = Piece(Black, Small, Sq,    Flat)
+  val BSQH = Piece(Black, Small, Sq,    Hole)
+  val BSRF = Piece(Black, Small, Round, Flat)
+  val BSRH = Piece(Black, Small, Round, Hole)
+
   def assertWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
     assert(turnsWon(turns))
   }
@@ -73,7 +90,6 @@ class QuartoTest extends FlatSpec with Matchers {
       (P2, WLQH, Square(I0, I3), None))
     )
   }
-
 
   it should "recognize a vertical win" in {
     assertWin(List(
@@ -198,7 +214,7 @@ class QuartoTest extends FlatSpec with Matchers {
     )
   }
 
-  it should "accept when when all pieces are played and the last piece does not win" in {
+  it should "accept when all pieces are played and the last piece does not win" in {
     assertNoWin(List(
           (P1, BLRF, Square(I1, I1), Some(BLRH)),
           (P2, BLRH, Square(I1, I3), Some(BLQF)),
@@ -242,22 +258,5 @@ class QuartoTest extends FlatSpec with Matchers {
   it should "not be equal to a piece with different attributes" in {
     assert(WLQF != Piece(Black, Large, Sq, Flat))
   }
-
-  val WLQF = Piece(White, Large, Sq,    Flat)
-  val WLQH = Piece(White, Large, Sq,    Hole)
-  val WLRF = Piece(White, Large, Round, Flat)
-  val WLRH = Piece(White, Large, Round, Hole)
-  val WSQF = Piece(White, Small, Sq,    Flat)
-  val WSQH = Piece(White, Small, Sq,    Hole)
-  val WSRF = Piece(White, Small, Round, Flat)
-  val WSRH = Piece(White, Small, Round, Hole)
-  val BLQF = Piece(Black, Large, Sq,    Flat)
-  val BLQH = Piece(Black, Large, Sq,    Hole)
-  val BLRF = Piece(Black, Large, Round, Flat)
-  val BLRH = Piece(Black, Large, Round, Hole)
-  val BSQF = Piece(Black, Small, Sq,    Flat)
-  val BSQH = Piece(Black, Small, Sq,    Hole)
-  val BSRF = Piece(Black, Small, Round, Flat)
-  val BSRH = Piece(Black, Small, Round, Hole)
 
 }
