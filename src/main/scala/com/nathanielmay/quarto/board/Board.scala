@@ -35,8 +35,18 @@ sealed case class Board(squares: Map[Square, Piece] = Map()) {
   }
 }
 
+/** Square on the board
+  *
+  * @param h horizontal index
+  * @param v vertical index
+  */
 sealed case class Square(h: Index, v: Index)
 
+/** Singleton types for board indexes make
+  * illegal board locations unrepresentable
+  *
+  * @param i value of index
+  */
 sealed abstract class Index(val i: Int)
 case object I0 extends Index(0)
 case object I1 extends Index(1)

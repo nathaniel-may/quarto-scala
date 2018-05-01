@@ -5,6 +5,12 @@ sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   override def toString: String = "" + color + size + shape + top
 }
 
+/** Common parent type allows for calculating
+  * game without knowledge of individual attributes
+  *
+  * Singleton attribute instances used to make
+  * illegal pieces unrepresentable
+  */
 sealed trait Attribute
 
 trait Color extends Attribute
