@@ -6,14 +6,24 @@ object Board{
 
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
+  //returns some board iff squares is a valid game state
+  def apply(squares: Map[Square, Piece] = Map()): Option[Board] = {
+    if (Board.noDuplicatePieces(squares))
+      Some(new Board(squares))
+    else
+      None //TODO: Make custom sum type where this branch contains error info?
+  }
+
+  def apply(): Board = new Board(Map())
+
   private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
     m.map({case (_, v) => (v, Unit)}).size == m.size
   }
 
 }
 
-sealed case class Board(squares: Map[Square, Piece] = Map()) {
-  require(Board.noDuplicatePieces(squares) , "the given map has two different squares with identical pieces")
+//private constructor forces creation from apply methods which contains error handling
+sealed case class Board private (squares: Map[Square, Piece]) {
 
   def isFull: Boolean = squares.size >= 16
 

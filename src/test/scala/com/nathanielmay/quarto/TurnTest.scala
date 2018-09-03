@@ -7,28 +7,22 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TurnTest extends FlatSpec with Matchers {
 
-  "a Turn" should "reject when active and toPlace are the same" in {
-    intercept[Exception] {
-      Turn(Quarto(), P1, WLQF, Square(I0, I0), Some(WLQF))
-    }
+  "a Turn" should "be None when active and toPlace are the same" in {
+    Turn(Quarto(), P1, WLQF, Square(I0, I0), Some(WLQF)).isEmpty
   }
 
-  it should "reject when active piece is already placed" in {
-    intercept[Exception] {
-      takeTurns(Quarto())(List(
-        (P1, WLQF, Square(I0, I0), Some(BLQF)),
-        (P2, BLQF, Square(I1, I0), Some(WLQF))
-      ))
-    }
+  it should "be None when active piece is already placed" in {
+    takeTurns(Quarto())(List(
+      (P1, WLQF, Square(I0, I0), Some(BLQF)),
+      (P2, BLQF, Square(I1, I0), Some(WLQF))
+    )).isEmpty
   }
 
-  it should "reject when square is occupied" in {
-    intercept[Exception] {
-      takeTurns(Quarto())(List(
-        (P1, WLQF, Square(I0, I0), Some(BLQF)),
-        (P2, BLQF, Square(I0, I0), Some(BSRH))
-      ))
-    }
+  it should "be None when square is occupied" in {
+    takeTurns(Quarto())(List(
+      (P1, WLQF, Square(I0, I0), Some(BLQF)),
+      (P2, BLQF, Square(I0, I0), Some(BSRH))
+    )).isEmpty
   }
 
   it should "accept valid active piece for winning move" in {
@@ -55,8 +49,9 @@ class TurnTest extends FlatSpec with Matchers {
       (P2, BLQF, Square(I0, I1), Some(BLRH)),
       (P1, BLRH, Square(I0, I2), Some(WLQH)),
       (P2, WLQH, Square(I0, I3), Some(WLQF)))
-    ) should matchPattern {
-      case game: Quarto if Quarto.isWon(game.board) && game.active.isEmpty =>
+    ) match {
+      case None => fail()
+      case Some(game) => assert(Quarto.isWon(game.board) && game.active.isEmpty)
     }
   }
 
@@ -103,15 +98,13 @@ class TurnTest extends FlatSpec with Matchers {
   }
 
   it should "reject when game is already won" in {
-    intercept[Exception] {
-      takeTurns(Quarto())(List(
-        (P1, WLQF, Square(I0, I0), Some(BLQF)),
-        (P2, BLQF, Square(I0, I1), Some(BLRH)),
-        (P1, BLRH, Square(I0, I2), Some(WLQH)),
-        (P2, WLQH, Square(I0, I3), None),
-        (P1, BSRH, Square(I0, I0), Some(WSQF)))
-      )
-    }
+    takeTurns(Quarto())(List(
+      (P1, WLQF, Square(I0, I0), Some(BLQF)),
+      (P2, BLQF, Square(I0, I1), Some(BLRH)),
+      (P1, BLRH, Square(I0, I2), Some(WLQH)),
+      (P2, WLQH, Square(I0, I3), None),
+      (P1, BSRH, Square(I0, I0), Some(WSQF)))
+    ).isEmpty
   }
 
 }
