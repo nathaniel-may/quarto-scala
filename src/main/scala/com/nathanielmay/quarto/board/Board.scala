@@ -1,17 +1,19 @@
 package com.nathanielmay.quarto.board
 
 import com.nathanielmay.quarto.piece.Piece
+import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
+import scala.util.{Try, Success, Failure}
 
 object Board{
 
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
   //returns some board iff squares is a valid game state
-  def apply(squares: Map[Square, Piece] = Map()): Option[Board] =
+  def apply(squares: Map[Square, Piece] = Map()): Try[Board] =
     if (Board.noDuplicatePieces(squares))
-      Some(new Board(squares))
+      Success(new Board(squares))
     else
-      None //TODO: Make custom sum type where this branch contains error info?
+      Failure(DuplicatePieceError)
 
   def apply(): Board = new Board(Map())
 
