@@ -3,14 +3,14 @@ package com.nathanielmay.quarto
 import com.nathanielmay.quarto.board.{Board, Square, I0, I1, I2, I3}
 import com.nathanielmay.quarto.piece.{Black, Flat, Hole, Large, Piece, Round, Small, White, Square => Sq}
 import testingUtil.Pieces._
-import testingUtil.Util.{assertNoWin, assertWin, takeTurns, emptyQuarto, definedQuarto, quarto}
+import testingUtil.Util.{assertNoWin, assertWin, takeTurns, failedQuarto, successQuarto, quarto}
 import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
 
   "a Quarto game"  should "be None with active that is already placed" in {
     val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> BSRH)
-    assert(emptyQuarto(Board(squares),Some(WLQF)))
+    assert(failedQuarto(Board(squares),Some(WLQF)))
   }
 
   it should "should be valid without active piece if game is won" in {
@@ -18,11 +18,11 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    assert(definedQuarto(Board(squares), None))
+    assert(successQuarto(Board(squares), None))
   }
 
   it should "be None without active if board is not new" in {
-    assert(emptyQuarto(Board(Map(Square(I1, I2) -> WLQF)), None))
+    assert(failedQuarto(Board(Map(Square(I1, I2) -> WLQF)), None))
   }
 
   it should "be equal to a game from saved state" in {
@@ -49,7 +49,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Square(I0, I1) -> BLQF,
       Square(I0, I2) -> BLRH,
       Square(I0, I3) -> WLQH)
-    assert(definedQuarto(board.Board(squares), None))
+    assert(successQuarto(board.Board(squares), None))
   }
 
   it should "recognize a horizontal win" in {

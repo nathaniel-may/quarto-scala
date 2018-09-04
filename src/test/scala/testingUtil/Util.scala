@@ -4,16 +4,17 @@ import com.nathanielmay.quarto.board.Square
 import com.nathanielmay.quarto.board.Board
 import com.nathanielmay.quarto.piece.Piece
 import com.nathanielmay.quarto.{Player, Quarto, Turn}
+import scala.util.{Try, Success}
 
 object Util {
 
-  def emptyQuarto(board: Option[Board], forOpponent: Option[Piece]): Boolean =
-    quarto(board, forOpponent).isEmpty
+  def failedQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
+    quarto(board, forOpponent).isFailure
 
-  def definedQuarto(board: Option[Board], forOpponent: Option[Piece]): Boolean =
-    quarto(board, forOpponent).isDefined
+  def successQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
+    quarto(board, forOpponent).isSuccess
 
-  def quarto(board: Option[Board], forOpponent: Option[Piece]): Option[Quarto] =
+  def quarto(board: Try[Board], forOpponent: Option[Piece]): Try[Quarto] =
     board.flatMap(b => Quarto(b,forOpponent))
 
   def assertWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
@@ -25,11 +26,11 @@ object Util {
   }
 
   def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean =
-    takeTurns(Quarto())(turns).fold(false)(game => Quarto.isWon(game.board))
+    takeTurns(Quarto())(turns).fold(_ => false, game => Quarto.isWon(game.board))
 
-  def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]): Option[Quarto] = {
-    turns.foldLeft[Option[Quarto]](Some(q0))({case (opGame, (player, piece, square, forOpponent)) =>
-      opGame.flatMap(game => Turn(game, player, piece, square, forOpponent))
+  def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]): Try[Quarto] = {
+    turns.foldLeft[Try[Quarto]](Success(q0))({case (tryGame, (player, piece, square, forOpponent)) =>
+      tryGame.flatMap(game => Turn(game, player, piece, square, forOpponent))
             .flatMap(Quarto.takeTurn)
     })
   }
