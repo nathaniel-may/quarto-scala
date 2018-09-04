@@ -4,14 +4,12 @@ import com.nathanielmay.quarto.board.{Board, Square}
 import com.nathanielmay.quarto.piece.{Attribute, Piece}
 
 case object Quarto{
-  def apply(): Quarto = Quarto(Board(), None)
-  //curried apply function to use lift when an Option[Board] is in hand
-  def apply(board: Board)(forOpponent: Option[Piece]): Option[Quarto] = {
+  def apply(): Quarto = new Quarto(Board(), None)
+  def apply(board: Board, forOpponent: Option[Piece]): Option[Quarto] =
     if (Quarto.validActive(board, forOpponent))
       Some(new Quarto(board, forOpponent))
     else
       None
-  }
 
   private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Square(h, v)))
   private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Square(h, v)))
@@ -21,17 +19,19 @@ case object Quarto{
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
   def takeTurn(turn: Turn): Option[Quarto] = {
-    turn.nextBoard.map(Quarto.apply).flatMap[Quarto](f => f(turn.forOpponent))
+    turn.nextBoard.flatMap(board => Quarto(board, turn.forOpponent))
       .flatMap(next =>
-        turn.forOpponent.fold(Some(next))(p =>
-          if (turn.game.board.squares.values.exists(_ == p) && Quarto.isWon(next.board))
-            Some(Quarto(next.board, None))
-          else Some(next)))
+        turn.forOpponent match {
+          case Some(p) if turn.game.board.squares.values.exists(_ == p) &&
+                          Quarto.isWon(next.board) =>
+            Quarto(next.board, None)
+          case _ =>
+            Some(next)
+        })
   }
 
-  def isWon(board: Board): Boolean = {
+  def isWon(board: Board): Boolean =
     allLines.exists(winningLine(board, _))
-  }
 
   private def winningLine(board: Board, line: List[Square]): Boolean = {
     val pieces     = line.flatMap(piece => board.squares.get(piece))

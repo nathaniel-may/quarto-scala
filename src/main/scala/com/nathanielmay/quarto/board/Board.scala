@@ -7,18 +7,16 @@ object Board{
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
   //returns some board iff squares is a valid game state
-  def apply(squares: Map[Square, Piece] = Map()): Option[Board] = {
+  def apply(squares: Map[Square, Piece] = Map()): Option[Board] =
     if (Board.noDuplicatePieces(squares))
       Some(new Board(squares))
     else
       None //TODO: Make custom sum type where this branch contains error info?
-  }
 
   def apply(): Board = new Board(Map())
 
-  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean = {
-    m.map({case (_, v) => (v, Unit)}).size == m.size
-  }
+  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean =
+    m.map{case (_, v) => (v, Unit)}.size == m.size
 
 }
 

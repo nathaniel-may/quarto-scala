@@ -14,7 +14,7 @@ object Util {
     quarto(board, forOpponent).isDefined
 
   def quarto(board: Option[Board], forOpponent: Option[Piece]): Option[Quarto] =
-    board.map(Quarto.apply).flatMap[Quarto](f => f(forOpponent))
+    board.flatMap(b => Quarto(b,forOpponent))
 
   def assertWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
     assert(turnsWon(turns))
