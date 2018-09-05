@@ -30,6 +30,9 @@ case object Quarto{
   def isWon(board: Board): Boolean =
     allLines.exists(winningLine(board, _))
 
+  def willWin(game: Quarto, piece: Piece, square: Square): Boolean =
+    Board(game.board.squares + (square -> piece)).map(Quarto.isWon).fold(_ => false, identity)
+
   private def winningLine(board: Board, line: List[Square]): Boolean = {
     line.flatMap(piece => board.get(piece))
       .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
@@ -54,7 +57,7 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
 
   def takeTurn(p: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
     val tryNextBoard     = Board(board.squares + (square -> piece))
-    val willWin          = tryNextBoard.map(Quarto.isWon).fold(_ => false, identity)
+    val willWin          = Quarto.willWin(this, piece, square)
     val finalTurn        = isLastTurn || willWin
     val validPiece       = active.fold(false)(p =>
       p == piece && !board.contains(piece) && !forOpponent.contains(piece))
