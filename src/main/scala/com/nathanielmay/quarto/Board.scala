@@ -4,24 +4,32 @@ import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
 import scala.util.{Failure, Success, Try}
 
 object Board{
-
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
-  //returns some board iff map contains a valid game state
+  def apply(): Board = new Board(Map())
+
+  /** smart constructor
+    *
+    * @param tiles map identifying the spaces with pieces on them
+    * @return board iff map contains a valid game state
+    */
   def apply(tiles: Map[Tile, Piece] = Map()): Try[Board] =
     if (Board.noDuplicatePieces(tiles))
       Success(new Board(tiles))
     else
       Failure(DuplicatePieceError)
 
-  def apply(): Board = new Board(Map())
-
   private def noDuplicatePieces(m: Map[Tile, Piece]): Boolean =
     m.map{case (_, v) => (v, Unit)}.size == m.size
 
 }
 
-//private constructor forces creation from apply methods which contains error handling
+/** Board for a Quarto game
+  *
+  * @param tiles map identifying the spaces with pieces on them
+  *
+  * @constructor only called by apply functions
+  */
 sealed case class Board private (tiles: Map[Tile, Piece]) {
   def isEmpty: Boolean = tiles.isEmpty
   def isFull: Boolean = tiles.size >= 16

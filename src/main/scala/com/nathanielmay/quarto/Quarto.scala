@@ -13,6 +13,13 @@ import com.nathanielmay.quarto.Exceptions.{
 
 case object Quarto{
   def apply(): Quarto = new Quarto(Board(), None)
+
+  /** Smart constructor for Quarto game
+    *
+    * @param board locations of all placed pieces
+    * @param forOpponent the piece to be placed next
+    * @return Success(game) or Failure(exception)
+    */
   def apply(board: Board, forOpponent: Option[Piece]): Try[Quarto] =
     if (Quarto.validPieceForOpponent(board, forOpponent))
       Success(new Quarto(board, forOpponent))
@@ -24,7 +31,7 @@ case object Quarto{
   private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
                              Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => Tile(h, v)}))
   //TODO add squares variant
-  val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
+  private val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 
   def isWon(board: Board): Boolean =
     allLines.exists(winningLine(board, _))
@@ -46,6 +53,12 @@ case object Quarto{
 
 }
 
+/** class used for Quarto game representation and logic
+  *
+  * @constructor only used by apply methods
+  * @param board locations of all placed pieces
+  * @param active the piece to be placed next
+  */
 sealed case class Quarto private (board: Board, active: Option[Piece]){
   val isFirstTurn: Boolean = board.isEmpty && active.isEmpty
   val isLastTurn:  Boolean = board.size == 15
@@ -54,7 +67,15 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
                              else if (board.size % 2 == 0 && active.isDefined) P2
                              else P1
 
-  def takeTurn(p: Player, piece: Piece, tile: Tile, forOpponent: Option[Piece]): Try[Quarto] = {
+  /** takes turns after the first turn
+    *
+    * @param person player taking this turn
+    * @param piece piece being placed
+    * @param tile where the piece is being placed
+    * @param forOpponent what piece the opponent must place on their next turn
+    * @return Success(game) with the next state of the game or Failure(exception)
+    */
+  def takeTurn(person: Player, piece: Piece, tile: Tile, forOpponent: Option[Piece]): Try[Quarto] = {
     val tryNextBoard     = Board(board.tiles + (tile -> piece))
     val willWin          = Quarto.willWin(this, piece, tile)
     val finalTurn        = isLastTurn || willWin
@@ -65,7 +86,7 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
 
     if(isFirstTurn)
       Failure(CannotPlacePieceOnFirstTurnError)
-    else if (p != player)
+    else if (person != player)
       Failure(OutOfTurnError)
     else if (board.contains(tile))
       Failure(InvalidPlacementError)
@@ -81,6 +102,12 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
       tryNextBoard.fold[Try[Quarto]](f => Failure(f), board => Success(new Quarto(board, forOpponent)))
   }
 
+  /** the first turn only involves handing a piece to the second player to place
+    *
+    * @param player player taking the first turn. Must be player 1.
+    * @param forOpponent piece the opponent must place on their next turn
+    * @return
+    */
   def takeFirstTurn(player: Player, forOpponent: Piece): Try[Quarto] =
     if(!isFirstTurn)
       Failure(MustPlacePieceError)
@@ -101,6 +128,11 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
     }
 }
 
+/** singleton objects representing player 1 and player 2
+  *
+  * @constructor only to be used here for P1 and P2 objects
+  * @param num Int used for logic and strings for players
+  */
 sealed abstract class Player(val num: Int)
 case object P1 extends Player(1)
 case object P2 extends Player(2)
