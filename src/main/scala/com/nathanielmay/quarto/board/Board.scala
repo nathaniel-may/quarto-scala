@@ -24,19 +24,19 @@ object Board{
 
 //private constructor forces creation from apply methods which contains error handling
 sealed case class Board private (squares: Map[Square, Piece]) {
-
+  def isEmpty: Boolean = squares.isEmpty
   def isFull: Boolean = squares.size >= 16
-
+  def size: Int = squares.size
   def contains(sq: Square): Boolean = squares.contains(sq)
-
   def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
+  def get(sq: Square): Option[Piece] = squares.get(sq)
 
   override def toString: String = {
     Board.indexes.map(h =>
       Board.indexes.map(v =>
         squares.get(Square(h, v)).fold("    ")(_.toString)
-      ).mkString("|","|","|")
-    ).mkString("\n", "\n", "\n")
+      ).mkString("|","|","|\n")
+    ).mkString
   }
   
 }
