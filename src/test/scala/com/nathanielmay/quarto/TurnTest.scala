@@ -10,9 +10,9 @@ import com.nathanielmay.quarto.Exceptions.{
   InvalidPlacementError,
   GameOverError,
   InvalidPieceForOpponent,
-  MalformedTurnError,
-  CannotPlacePieceOnFirstTurnError,
-  MustPlacePieceError}
+  BadPieceError,
+  MustPlacePieceError,
+  MustPassPieceError}
 
 class TurnTest extends FlatSpec with Matchers {
 
@@ -52,28 +52,29 @@ class TurnTest extends FlatSpec with Matchers {
   }
 
   it should "fail when handing the opponent the piece just placed" in {
-    expectError(MalformedTurnError)(P1, WLQF)(List(
+    expectError(BadPieceError)(P1, WLQF)(List(
       (P2, WLQF, Tile(I0, I0), Some(WLQF)))
     )
   }
 
   it should "fail when attempting to place a piece other than the one the opponent chose" in {
-    expectError(MalformedTurnError)(P1, WLQF)(List(
+    expectError(BadPieceError)(P1, WLQF)(List(
       (P2, BLQF, Tile(I0, I0), Some(WLRF)))
     )
   }
 
-  it should "fail when attempting to place a piece on the first turn" in {
-    assert(
-      Quarto().takeTurn(P1, WLQF, Tile(I0, I0), Some(BLQF))
-      .failed.get == CannotPlacePieceOnFirstTurnError)
+  it should "fail when attempting to place a piece before one has been passed on the first turn" in {
+    Quarto()
+      .placePiece(P1, WLQF, Tile(I0, I0))
+      .fold(tryGame =>
+        assert(tryGame.failed.get == MustPassPieceError), fail())
   }
 
-  it should "fail when not placing a piece on a turn that isn't the first turn" in {
+  it should "fail when passing two pieces in a row" in {
     assert(
       Quarto()
-        .takeFirstTurn(P1, WLQF)
-        .flatMap(game => game.takeFirstTurn(P2, WLQF))
+        .passPiece(P1, WLQF)
+        .flatMap(game => game.passPiece(P2, BLQF))
         .failed.get == MustPlacePieceError
     )
   }
@@ -81,8 +82,8 @@ class TurnTest extends FlatSpec with Matchers {
   it should "fail when not placing a piece on a turn that isn't the first turn regardless of player" in {
     assert(
       Quarto()
-        .takeFirstTurn(P1, WLQF)
-        .flatMap(game => game.takeFirstTurn(P1, BLQF))
+        .passPiece(P1, WLQF)
+        .flatMap(game => game.passPiece(P1, BLQF))
         .failed.get == MustPlacePieceError
     )
   }
