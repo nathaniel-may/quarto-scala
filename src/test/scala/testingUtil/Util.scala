@@ -1,10 +1,7 @@
 package testingUtil
 
-import com.nathanielmay.quarto.board.Square
-import com.nathanielmay.quarto.board.Board
-import com.nathanielmay.quarto.piece.Piece
-import com.nathanielmay.quarto.{Player, Quarto, Turn}
-import scala.util.{Try, Success}
+import com.nathanielmay.quarto.{Board, Piece, Quarto, Player, Tile}
+import scala.util.{Failure, Success, Try}
 
 object Util {
 
@@ -17,21 +14,31 @@ object Util {
   def quarto(board: Try[Board], forOpponent: Option[Piece]): Try[Quarto] =
     board.flatMap(b => Quarto(b,forOpponent))
 
-  def assertWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
-    assert(turnsWon(turns))
+  def expectError(e: Exception)(firstTurnPlayer: Player, firstTurnForOpponent: Piece)(turns: List[(Player, Piece, Tile, Option[Piece])]): Boolean =
+    takeTurns(firstTurnPlayer, firstTurnForOpponent)(turns).failed.get == e
+
+  def assertWin(firstTurnPlayer: Player, firstTurnForOpponent: Piece)(turns: List[(Player, Piece, Tile, Option[Piece])]): Unit = {
+    assert(turnsWon(firstTurnPlayer, firstTurnForOpponent)(turns))
   }
 
-  def assertNoWin(turns: List[(Player, Piece, Square, Option[Piece])]): Unit = {
-    assert(!turnsWon(turns))
+  def assertNoWin(firstTurnPlayer: Player, firstTurnForOpponent: Piece)(turns: List[(Player, Piece, Tile, Option[Piece])]): Unit = {
+    assert(!turnsWon(firstTurnPlayer, firstTurnForOpponent)(turns))
   }
 
-  def turnsWon(turns: List[(Player, Piece, Square, Option[Piece])]): Boolean =
-    takeTurns(Quarto())(turns).fold(_ => false, game => Quarto.isWon(game.board))
+  def turnsWon(firstTurnPlayer: Player, firstTurnForOpponent: Piece)(turns: List[(Player, Piece, Tile, Option[Piece])]): Boolean =
+    takeTurns(firstTurnPlayer, firstTurnForOpponent)(turns).fold(_ => false, game => Quarto.isWon(game.board))
 
-  def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Square, Option[Piece])]): Try[Quarto] = {
-    turns.foldLeft[Try[Quarto]](Success(q0))({case (tryGame, (player, piece, square, forOpponent)) =>
-      tryGame.flatMap(game => Turn(game, player, piece, square, forOpponent))
-            .flatMap(Quarto.takeTurn)
+  def takeTurns(q0: Quarto)(turns: List[(Player, Piece, Tile, Option[Piece])]): Try[Quarto] = {
+    if (q0 == Quarto())
+      Failure(new Exception("no piece is placed on the first turn"))
+    else
+      turns.foldLeft[Try[Quarto]](Success(q0))({case (tryGame, (player, piece, tile, forOpponent)) =>
+        tryGame.flatMap(game => game.takeTurn(player, piece, tile, forOpponent))
     })
+  }
+
+  def takeTurns(firstTurnPlayer: Player, firstTurnForOpponent: Piece)(turns: List[(Player, Piece, Tile, Option[Piece])]): Try[Quarto] = {
+    Quarto().takeFirstTurn(firstTurnPlayer, firstTurnForOpponent)
+      .fold(Failure(_), game => takeTurns(game)(turns))
   }
 }

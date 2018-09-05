@@ -1,104 +1,103 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.board.{Board, Square, I0, I1, I2, I3}
-import com.nathanielmay.quarto.piece.{Black, Flat, Hole, Large, Piece, Round, Small, White, Square => Sq}
+import com.nathanielmay
 import testingUtil.Pieces._
-import testingUtil.Util.{assertNoWin, assertWin, takeTurns, failedQuarto, successQuarto, quarto}
+import testingUtil.Util.{assertNoWin, assertWin, failedQuarto, quarto, successQuarto, takeTurns}
 import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
 
   "a Quarto game"  should "be None with active that is already placed" in {
-    val squares = Map(Square(I1, I2) -> WLQF, Square(I2, I2) -> BSRH)
-    assert(failedQuarto(Board(squares),Some(WLQF)))
+    val tiles = Map(Tile(I1, I2) -> WLQF, Tile(I2, I2) -> BSRH)
+    assert(failedQuarto(Board(tiles),Some(WLQF)))
   }
 
   it should "should be valid without active piece if game is won" in {
-    val squares = Map(Square(I0, I0) -> WLQF,
-      Square(I0, I1) -> BLQF,
-      Square(I0, I2) -> BLRH,
-      Square(I0, I3) -> WLQH)
-    assert(successQuarto(Board(squares), None))
+    val tiles = Map(Tile(I0, I0) -> WLQF,
+      Tile(I0, I1) -> BLQF,
+      Tile(I0, I2) -> BLRH,
+      Tile(I0, I3) -> WLQH)
+    assert(successQuarto(Board(tiles), None))
   }
 
   it should "be None without active if board is not new" in {
-    assert(failedQuarto(Board(Map(Square(I1, I2) -> WLQF)), None))
+    assert(failedQuarto(Board(Map(Tile(I1, I2) -> WLQF)), None))
   }
 
   it should "be equal to a game from saved state" in {
-    val q1 = takeTurns(Quarto())(List(
-      (P1, WLQF, Square(I1, I2), Some(BLQF)),
-      (P2, BLQF, Square(I2, I2), Some(BSRH)))
+    val q1 = takeTurns(P1, WLQF)(List(
+      (P2, WLQF, Tile(I1, I2), Some(BLQF)),
+      (P1, BLQF, Tile(I2, I2), Some(BSRH)))
     )
 
-    val squares = Map(Square(I1, I2) -> Piece(White, Large, Sq, Flat),
-      Square(I2, I2) -> Piece(Black, Large, Sq, Flat)
+    val tiles = Map(Tile(I1, I2) -> Piece(White, Large, Square, Flat),
+      Tile(I2, I2) -> Piece(Black, Large, Square, Flat)
     )
 
-    val q2 = quarto(Board(squares), Some(Piece(Black, Small, Round, Hole)))
+    val q2 = quarto(Board(tiles), Some(Piece(Black, Small, Round, Hole)))
 
-    assert(q1.isDefined)
-    assert(q2.isDefined)
+    assert(q1.isSuccess)
+    assert(q2.isSuccess)
     assert(q1.get == q2.get)
     assert(q1 == q2)
 
   }
 
   it should "should be valid without active piece if board is won" in {
-    val squares = Map(Square(I0, I0) -> WLQF,
-      Square(I0, I1) -> BLQF,
-      Square(I0, I2) -> BLRH,
-      Square(I0, I3) -> WLQH)
-    assert(successQuarto(board.Board(squares), None))
+    val tiles = Map(Tile(I0, I0) -> WLQF,
+      Tile(I0, I1) -> BLQF,
+      Tile(I0, I2) -> BLRH,
+      Tile(I0, I3) -> WLQH)
+    assert(successQuarto(nathanielmay.quarto.Board(tiles), None))
   }
 
   it should "recognize a horizontal win" in {
-    assertWin(List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I0, I1), Some(BLRH)),
-      (P1, BLRH, Square(I0, I2), Some(WLQH)),
-      (P2, WLQH, Square(I0, I3), None))
+    assertWin(P1, WLQF)(List(
+      (P2, WLQF, Tile(I0, I0), Some(BLQF)),
+      (P1, BLQF, Tile(I0, I1), Some(BLRH)),
+      (P2, BLRH, Tile(I0, I2), Some(WLQH)),
+      (P1, WLQH, Tile(I0, I3), None))
     )
   }
 
   it should "recognize a vertical win" in {
-    assertWin(List(
-      (P1, WLQF, Square(I0, I2), Some(BLQF)),
-      (P2, BLQF, Square(I1 ,I2), Some(BLRH)),
-      (P1, BLRH, Square(I2, I2), Some(WLQH)),
-      (P2, WLQH, Square(I3, I2), None)
+    assertWin(P1, WLQF)(List(
+      (P2, WLQF, Tile(I0, I2), Some(BLQF)),
+      (P1, BLQF, Tile(I1 ,I2), Some(BLRH)),
+      (P2, BLRH, Tile(I2, I2), Some(WLQH)),
+      (P1, WLQH, Tile(I3, I2), None)
     ))
   }
 
   it should "recognize a diagonal0 win" in {
-    assertWin(List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I1, I1), Some(BLRH)),
-      (P1, BLRH, Square(I2, I2), Some(WLQH)),
-      (P2, WLQH, Square(I3, I3), None))
+    assertWin(P1, WLQF)(List(
+      (P2, WLQF, Tile(I0, I0), Some(BLQF)),
+      (P1, BLQF, Tile(I1, I1), Some(BLRH)),
+      (P2, BLRH, Tile(I2, I2), Some(WLQH)),
+      (P1, WLQH, Tile(I3, I3), None))
     )
   }
 
   it should "recognize a diagonal1 win" in {
-    assertWin(List(
-      (P1, WLQF, Square(I3, I0), Some(BLQF)),
-      (P2, BLQF, Square(I2, I1), Some(BLRH)),
-      (P1, BLRH, Square(I1, I2), Some(WLQH)),
-      (P2, WLQH, Square(I0, I3), None))
+    assertWin(P1, WLQF)(List(
+      (P2, WLQF, Tile(I3, I0), Some(BLQF)),
+      (P1, BLQF, Tile(I2, I1), Some(BLRH)),
+      (P2, BLRH, Tile(I1, I2), Some(WLQH)),
+      (P1, WLQH, Tile(I0, I3), None))
     )
   }
 
   it should "recognize a multi-line win" in {
-    assertWin(List(
-      (P1, WLQF, Square(I0, I0), Some(BLQF)),
-      (P2, BLQF, Square(I0, I1), Some(BLRH)),
-      (P1, BLRH, Square(I0, I2), Some(BSRH)),
+    assertWin(P1, WLQF)(List(
+      (P2, WLQF, Tile(I0, I0), Some(BLQF)),
+      (P1, BLQF, Tile(I0, I1), Some(BLRH)),
+      (P2, BLRH, Tile(I0, I2), Some(BSRH)),
 
-      (P2, BSRH, Square(I1, I3), Some(BSRF)),
-      (P1, BSRF, Square(I2, I3), Some(BLQH)),
-      (P2, BLQH, Square(I3, I3), Some(BLRF)),
+      (P1, BSRH, Tile(I1, I3), Some(BSRF)),
+      (P2, BSRF, Tile(I2, I3), Some(BLQH)),
+      (P1, BLQH, Tile(I3, I3), Some(BLRF)),
 
-      (P1, BLRF, Square(I0, I3), None))
+      (P2, BLRF, Tile(I0, I3), None))
     )
   }
 
@@ -107,7 +106,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "not recognize a game with one placed piece as won" in {
-    assertNoWin(List((P1, WLQF, Square(I1, I2), Some(BLQF))))
+    assertNoWin(P1, WLQF)(List((P2, WLQF, Tile(I1, I2), Some(BLQF))))
   }
 
 }

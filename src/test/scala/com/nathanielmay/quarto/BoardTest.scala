@@ -1,9 +1,8 @@
-package com.nathanielmay.quarto.board
+package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.{Board, I1, I2, Tile}
+import com.nathanielmay.quarto.Exceptions.InvalidPlacementError
 import org.scalatest.{FlatSpec, Matchers}
 import testingUtil.Pieces.WLQF
-import com.nathanielmay.quarto.Exceptions.InvalidPlacementError
 
 class BoardTest extends FlatSpec with Matchers{
 

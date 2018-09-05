@@ -1,6 +1,7 @@
 package testingUtil
 
-import com.nathanielmay.quarto.piece._
+import com.nathanielmay.quarto.Piece
+import com.nathanielmay.quarto.{White, Black, Large, Small, Square, Round, Flat, Hole}
 
 object Pieces {
 
