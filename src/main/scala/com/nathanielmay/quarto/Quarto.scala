@@ -7,7 +7,9 @@ import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError,
                                            InvalidPlacementError,
                                            GameOverError,
                                            InvalidPieceError,
-                                           InvalidPieceForOpponent}
+                                           InvalidPieceForOpponent,
+                                           CannotPlacePieceOnFirstTurnError,
+                                           MustPlacePieceError}
 import scala.util.{Try, Success, Failure}
 
 case object Quarto{
@@ -25,31 +27,19 @@ case object Quarto{
   //TODO add squares variant
   val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
 
-  def takeTurn(turn: Turn): Try[Quarto] = {
-    turn.nextBoard.flatMap[Quarto](board => Quarto(board, turn.forOpponent))
-      .flatMap(next =>
-        turn.forOpponent match {
-          case Some(p) if turn.game.board.squares.values.exists(_ == p) &&
-                          Quarto.isWon(next.board) =>
-            Quarto(next.board, None)
-          case _ =>
-            Success(next)
-        })
-  }
-
   def isWon(board: Board): Boolean =
     allLines.exists(winningLine(board, _))
 
   private def winningLine(board: Board, line: List[Square]): Boolean = {
-    val pieces     = line.flatMap(piece => board.squares.get(piece))
-    val attrCounts = pieces.foldLeft(Map[Attribute, Int]())((counts, piece) =>
-      piece.attrs.foldLeft(counts)((m, attr) =>
-        m.updated(attr, m.getOrElse(attr, 0) + 1)))
-    attrCounts.exists(4 <= _._2)
+    line.flatMap(piece => board.squares.get(piece))
+      .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
+        piece.attrs.foldLeft(counts)((m, attr) =>
+          m.updated(attr, m.getOrElse(attr, 0) + 1)))
+      .exists(4 <= _._2)
   }
 
   private def validPieceForOpponent(board: Board, forOpponent: Option[Piece]): Boolean = {
-    forOpponent.fold(board == Board() || Quarto.isWon(board) || board.isFull)(p => !board.contains(p) || Quarto.isWon(board))
+    forOpponent.fold(Quarto.isWon(board) || board.isFull)(p => !board.contains(p) || Quarto.isWon(board) || board == Board())
   }
 
 }
@@ -59,36 +49,41 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
   def isLastTurn:  Boolean = board.squares.size == 15
   def isComplete:  Boolean = Quarto.isWon(board) || board.isFull
   def player:      Player  = if (board.squares.size % 2 == 0) P1 else P2
-}
 
-object Turn {
-  //smart constructor
-  def apply(game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Turn] = {
-    val nextBoard        = Board(game.board.squares + (square -> piece))
-    val willWin          = nextBoard.map(Quarto.isWon).fold(_ => false, identity)
-    val finalTurn        = game.isLastTurn || willWin
-    val validPiece       = game.active.fold(game.isFirstTurn)(p => //TODO first turn issues?
-      p == piece && !game.board.contains(piece) && !forOpponent.contains(piece))
-    val validForOpponent = forOpponent.fold(game.isLastTurn || willWin)(p =>
-      (!game.board.contains(p) && p != piece) || finalTurn)
+  def takeTurn(player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
+    val tryNextBoard     = Board(board.squares + (square -> piece))
+    val willWin          = tryNextBoard.map(Quarto.isWon).fold(_ => false, identity)
+    val finalTurn        = isLastTurn || willWin
+    val validPiece       = active.fold(isFirstTurn)(p => //TODO first turn issues?
+      p == piece && !board.contains(piece) && !forOpponent.contains(piece))
+    val validForOpponent = forOpponent.fold(isLastTurn || willWin)(p =>
+      (!board.contains(p) && p != piece) || finalTurn)
 
-    if (player != game.player)
+    if(isFirstTurn)
+      Failure(CannotPlacePieceOnFirstTurnError)
+    if (player != player)
       Failure(OutOfTurnError)
-    else if (game.board.contains(square))
+    else if (board.contains(square))
       Failure(InvalidPlacementError)
-    else if (game.isComplete)
+    else if (isComplete)
       Failure(GameOverError)
     else if (!validPiece)
       Failure(InvalidPieceError)
     else if (!validForOpponent)
       Failure(InvalidPieceForOpponent)
+    else if (willWin)
+      tryNextBoard.fold[Try[Quarto]](f => Failure(f), board => Success(new Quarto(board, None)))
     else
-      Success(new Turn(game, player, piece, square, forOpponent))
+      tryNextBoard.fold[Try[Quarto]](f => Failure(f), board => Success(new Quarto(board, forOpponent)))
   }
-}
 
-sealed case class Turn private (game: Quarto, player: Player, piece: Piece, square: Square, forOpponent: Option[Piece]){
-  lazy val nextBoard = Board(game.board.squares + (square -> piece))
+  def takeFirstTurn(player: Player, forOpponent: Piece): Try[Quarto] =
+    if (player != P1)
+      Failure(OutOfTurnError)
+    else if(board != Board())
+      Failure(MustPlacePieceError)
+    else
+      Quarto(Board(), Some(forOpponent))
 }
 
 sealed abstract class Player(val num: Int)
