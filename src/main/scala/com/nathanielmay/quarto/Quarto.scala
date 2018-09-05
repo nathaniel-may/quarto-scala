@@ -6,7 +6,7 @@ import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError,
                                            OutOfTurnError,
                                            InvalidPlacementError,
                                            GameOverError,
-                                           InvalidPieceError,
+                                           MalformedTurnError,
                                            InvalidPieceForOpponent,
                                            CannotPlacePieceOnFirstTurnError,
                                            MustPlacePieceError}
@@ -45,10 +45,10 @@ case object Quarto{
 }
 
 sealed case class Quarto private (board: Board, active: Option[Piece]){
-  def isFirstTurn: Boolean = board.isEmpty && active.isEmpty
-  def isLastTurn:  Boolean = board.size == 15
-  def isComplete:  Boolean = Quarto.isWon(board) || board.isFull
-  def player:      Player  = if (board.isEmpty && active.isEmpty) P1
+  val isFirstTurn: Boolean = board.isEmpty && active.isEmpty
+  val isLastTurn:  Boolean = board.size == 15
+  val isComplete:  Boolean = Quarto.isWon(board) || board.isFull
+  val player:      Player  = if (board.isEmpty && active.isEmpty) P1
                              else if (board.size % 2 == 0 && active.isDefined) P2
                              else P1
 
@@ -56,21 +56,21 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
     val tryNextBoard     = Board(board.squares + (square -> piece))
     val willWin          = tryNextBoard.map(Quarto.isWon).fold(_ => false, identity)
     val finalTurn        = isLastTurn || willWin
-    val validPiece       = active.fold(isFirstTurn)(p =>
+    val validPiece       = active.fold(false)(p =>
       p == piece && !board.contains(piece) && !forOpponent.contains(piece))
     val validForOpponent = forOpponent.fold(isLastTurn || willWin)(p =>
       (!board.contains(p) && p != piece) || finalTurn)
 
     if(isFirstTurn)
       Failure(CannotPlacePieceOnFirstTurnError)
-    if (p != player)
+    else if (p != player)
       Failure(OutOfTurnError)
     else if (board.contains(square))
       Failure(InvalidPlacementError)
     else if (isComplete)
       Failure(GameOverError)
     else if (!validPiece)
-      Failure(InvalidPieceError)
+      Failure(MalformedTurnError)
     else if (!validForOpponent)
       Failure(InvalidPieceForOpponent)
     else if (willWin)
