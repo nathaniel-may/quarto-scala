@@ -8,45 +8,45 @@ object Board{
 
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
-  //returns some board iff squares is a valid game state
-  def apply(squares: Map[Square, Piece] = Map()): Try[Board] =
-    if (Board.noDuplicatePieces(squares))
-      Success(new Board(squares))
+  //returns some board iff map contains a valid game state
+  def apply(tiles: Map[Tile, Piece] = Map()): Try[Board] =
+    if (Board.noDuplicatePieces(tiles))
+      Success(new Board(tiles))
     else
       Failure(DuplicatePieceError)
 
   def apply(): Board = new Board(Map())
 
-  private def noDuplicatePieces(m: Map[Square, Piece]): Boolean =
+  private def noDuplicatePieces(m: Map[Tile, Piece]): Boolean =
     m.map{case (_, v) => (v, Unit)}.size == m.size
 
 }
 
 //private constructor forces creation from apply methods which contains error handling
-sealed case class Board private (squares: Map[Square, Piece]) {
-  def isEmpty: Boolean = squares.isEmpty
-  def isFull: Boolean = squares.size >= 16
-  def size: Int = squares.size
-  def contains(sq: Square): Boolean = squares.contains(sq)
-  def contains(p: Piece): Boolean = squares.valuesIterator.contains(p)
-  def get(sq: Square): Option[Piece] = squares.get(sq)
+sealed case class Board private (tiles: Map[Tile, Piece]) {
+  def isEmpty: Boolean = tiles.isEmpty
+  def isFull: Boolean = tiles.size >= 16
+  def size: Int = tiles.size
+  def contains(sq: Tile): Boolean = tiles.contains(sq)
+  def contains(p: Piece): Boolean = tiles.valuesIterator.contains(p)
+  def get(sq: Tile): Option[Piece] = tiles.get(sq)
 
   override def toString: String = {
     Board.indexes.map(h =>
       Board.indexes.map(v =>
-        squares.get(Square(h, v)).fold("    ")(_.toString)
+        tiles.get(Tile(h, v)).fold("    ")(_.toString)
       ).mkString("|","|","|\n")
     ).mkString
   }
-  
+
 }
 
-/** Square on the board
+/** Space on the board
   *
   * @param h horizontal index
   * @param v vertical index
   */
-sealed case class Square(h: Index, v: Index)
+sealed case class Tile(h: Index, v: Index)
 
 /** Singleton types for board indexes make
   * illegal board locations unrepresentable

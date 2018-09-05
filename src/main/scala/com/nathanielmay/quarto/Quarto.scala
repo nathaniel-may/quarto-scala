@@ -1,6 +1,6 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.board.{Board, Square}
+import com.nathanielmay.quarto.board.{Board, Tile}
 import com.nathanielmay.quarto.piece.{Attribute, Piece}
 import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError,
                                            OutOfTurnError,
@@ -20,20 +20,20 @@ case object Quarto{
     else
       Failure(InvalidPieceForOpponentError)
 
-  private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Square(h, v)))
-  private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Square(h, v)))
-  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => board.Square(h, v)}),
-                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Square(h, v)}))
+  private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
+  private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
+  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => board.Tile(h, v)}),
+                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Tile(h, v)}))
   //TODO add squares variant
-  val allLines: List[List[Square]] = hLines ++ vLines ++ dLines
+  val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 
   def isWon(board: Board): Boolean =
     allLines.exists(winningLine(board, _))
 
-  def willWin(game: Quarto, piece: Piece, square: Square): Boolean =
-    Board(game.board.squares + (square -> piece)).map(Quarto.isWon).fold(_ => false, identity)
+  def willWin(game: Quarto, piece: Piece, tile: Tile): Boolean =
+    Board(game.board.tiles + (tile -> piece)).map(Quarto.isWon).fold(_ => false, identity)
 
-  private def winningLine(board: Board, line: List[Square]): Boolean = {
+  private def winningLine(board: Board, line: List[Tile]): Boolean = {
     line.flatMap(piece => board.get(piece))
       .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
         piece.attrs.foldLeft(counts)((m, attr) =>
@@ -55,9 +55,9 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
                              else if (board.size % 2 == 0 && active.isDefined) P2
                              else P1
 
-  def takeTurn(p: Player, piece: Piece, square: Square, forOpponent: Option[Piece]): Try[Quarto] = {
-    val tryNextBoard     = Board(board.squares + (square -> piece))
-    val willWin          = Quarto.willWin(this, piece, square)
+  def takeTurn(p: Player, piece: Piece, tile: Tile, forOpponent: Option[Piece]): Try[Quarto] = {
+    val tryNextBoard     = Board(board.tiles + (tile -> piece))
+    val willWin          = Quarto.willWin(this, piece, tile)
     val finalTurn        = isLastTurn || willWin
     val validPiece       = active.fold(false)(p =>
       p == piece && !board.contains(piece) && !forOpponent.contains(piece))
@@ -68,7 +68,7 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
       Failure(CannotPlacePieceOnFirstTurnError)
     else if (p != player)
       Failure(OutOfTurnError)
-    else if (board.contains(square))
+    else if (board.contains(tile))
       Failure(InvalidPlacementError)
     else if (isComplete)
       Failure(GameOverError)
