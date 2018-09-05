@@ -1,7 +1,6 @@
 package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
-
 import scala.util.{Failure, Success, Try}
 
 object Board{
