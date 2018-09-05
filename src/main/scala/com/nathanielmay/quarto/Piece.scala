@@ -1,4 +1,4 @@
-package com.nathanielmay.quarto.piece
+package com.nathanielmay.quarto
 
 sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   val attrs = List(color, size, shape, top)

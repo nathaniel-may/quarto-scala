@@ -1,16 +1,9 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.board.{Board, Tile}
-import com.nathanielmay.quarto.piece.{Attribute, Piece}
-import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError,
-                                           OutOfTurnError,
-                                           InvalidPlacementError,
-                                           GameOverError,
-                                           MalformedTurnError,
-                                           InvalidPieceForOpponent,
-                                           CannotPlacePieceOnFirstTurnError,
-                                           MustPlacePieceError}
-import scala.util.{Try, Success, Failure}
+import com.nathanielmay.quarto
+import com.nathanielmay.quarto.Exceptions.{CannotPlacePieceOnFirstTurnError, GameOverError, InvalidPieceForOpponent, InvalidPieceForOpponentError, InvalidPlacementError, MalformedTurnError, MustPlacePieceError, OutOfTurnError}
+
+import scala.util.{Failure, Success, Try}
 
 case object Quarto{
   def apply(): Quarto = new Quarto(Board(), None)
@@ -22,8 +15,8 @@ case object Quarto{
 
   private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
   private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
-  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => board.Tile(h, v)}),
-                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => board.Tile(h, v)}))
+  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => quarto.Tile(h, v)}),
+                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => quarto.Tile(h, v)}))
   //TODO add squares variant
   val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 

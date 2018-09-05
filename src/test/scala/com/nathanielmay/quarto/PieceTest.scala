@@ -1,5 +1,6 @@
 package com.nathanielmay.quarto.piece
 
+import com.nathanielmay.quarto._
 import testingUtil.Pieces.WLQF
 import org.scalatest.{FlatSpec, Matchers}
 

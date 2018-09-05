@@ -1,8 +1,8 @@
-package com.nathanielmay.quarto.board
+package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.piece.Piece
 import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
-import scala.util.{Try, Success, Failure}
+
+import scala.util.{Failure, Success, Try}
 
 object Board{
 
