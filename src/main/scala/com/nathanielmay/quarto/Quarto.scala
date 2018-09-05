@@ -80,10 +80,10 @@ sealed case class Quarto private (board: Board, active: Option[Piece]){
   }
 
   def takeFirstTurn(player: Player, forOpponent: Piece): Try[Quarto] =
-    if (player != P1)
-      Failure(OutOfTurnError)
-    else if(board != Board())
+    if(!isFirstTurn)
       Failure(MustPlacePieceError)
+    else if (this.player != P1 || player != P1)
+      Failure(OutOfTurnError)
     else
       Quarto(Board(), Some(forOpponent))
 
