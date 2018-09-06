@@ -32,24 +32,26 @@ case object Quarto{
 
 }
 
-/** class used for Quarto game representation and logic
+/** Parent class used for Quarto games. Child objects contain game representation and logic
   *
-  * @constructor only used by apply methods
   * @param board locations of all placed pieces
-  * @param active the piece to be placed next
+  * @param active the piece to be placed next or None if one needs to be passed
   */
-sealed abstract class Quarto (board: Board, active: Option[Piece]) {
-  val lastPlacedBy: Player = if (board.size % 2 == 0) P1 else P2
-}
+sealed abstract class Quarto (board: Board, active: Option[Piece])
 
 case object PassQuarto{
   def apply(board: Board): PassQuarto = new PassQuarto(board)
 }
 
+/** Represents a Quarto game that requires a piece to be passed to the opponent
+  * a piece cannot be placed in this state
+  *
+  * @param board locations of all placed pieces
+  */
 case class PassQuarto private (board: Board) extends Quarto(board: Board, None){
   val player: Player = if (board.size % 2 == 0) P1 else P2
 
-  /** hand a piece to the other player to place. it becomes their turn.
+  /** Hand a piece to the other player to place. it becomes their turn.
     *
     * @param person      player taking the first turn. Must be player 1.
     * @param forOpponent piece the opponent must place on their next turn
@@ -81,7 +83,13 @@ case object PlaceQuarto{
       Success(new PlaceQuarto(board, forOpponent))
 }
 
-case class PlaceQuarto private (board: Board, forOpponent: Some[Piece]) extends Quarto(board: Board, forOpponent: Some[Piece]){
+/** Represents a Quarto game that requires a piece to be placed
+  * a piece cannot be passed in this state
+  *
+  * @param board locations of all placed pieces
+  * @param active the piece that must be placed
+  */
+case class PlaceQuarto private (board: Board, active: Some[Piece]) extends Quarto(board: Board, active: Some[Piece]){
   val player: Player = if (board.size % 2 == 0) P2 else P1
 
   /** place a piece on the board if the game isn't won,
@@ -99,16 +107,22 @@ case class PlaceQuarto private (board: Board, forOpponent: Some[Piece]) extends 
     else if (Quarto.isWon(board) || board.isFull)
       Failure(GameOverError)
     else
-      Board(board.tiles + (tile -> forOpponent.get))
+      Board(board.tiles + (tile -> active.get))
         .fold[Try[Either[PassQuarto, FinalQuarto]]](
           f => Failure(f),
           board => if (Quarto.isWon(board)) Success(Right(FinalQuarto(board, Winner(person))))
           else if (board.isFull) Success(Right(FinalQuarto(board, Tie)))
           else Success(Left(PassQuarto(board))))
 
-  override def toString: String = s"$player needs to place $forOpponent on\n$board"
+  override def toString: String = s"$player needs to place $active on\n$board"
 }
 
+/** Represents the end state of a game. No moves can be made on it
+  * and it contains the results
+  *
+  * @param board locations of all placed pieces
+  * @param state denotes the winning player or a tie
+  */
 case class FinalQuarto(board: Board, state: GameEnd) extends Quarto(board, None)
 
 /** singleton objects representing player 1 and player 2

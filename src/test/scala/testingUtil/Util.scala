@@ -23,7 +23,7 @@ object Util {
 
   def assertWin(turns: List[Turn]): Unit = {
     turnsEndIn(turns).fold(
-      _ => assert(false), //TODO import fail() somehow?
+      _ => assert(false),
       state => assert(state == Winner(P1) || state == Winner(P2)))
   }
 
@@ -31,15 +31,13 @@ object Util {
     turnsEndIn(turns).fold(_ => assert(false) , result => assert(result == Tie))
   }
 
-  //TODO calling constructor again..
-  //TODO looks like I should use an if here... can I?
   private def turnsEndIn(turns: List[Turn]): Try[GameEnd] =
     takeTurns(Quarto())(turns).fold(f => Failure(f), {
       case FinalQuarto(_, state) => Success(state)
       case _ => Failure(new Exception("Bad Test. Game didn't end."))
     })
 
-  //TODO I call the quarto constructors here. Anyway to get rid of that?
+  //TODO I call the quarto constructors here. Anyway to get rid of that without wrapping?
   def takeTurns(q0: Quarto)(turns: List[Turn]): Try[Quarto] =
     turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
       tryGame.fold(f => Failure(f), game =>
