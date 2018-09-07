@@ -16,7 +16,7 @@ object Util {
     board.flatMap(b => Success(PassQuarto(b)))
 
   def quarto(board: Try[Board], forOpponent: Piece): Try[Quarto] =
-    board.flatMap(b => PlaceQuarto(b, Some(forOpponent)))
+    board.flatMap(b => PlaceQuarto(b, forOpponent))
 
   def expectError(e: Exception)(turns: List[Turn]): Boolean =
     takeTurns(Quarto())(turns).failed.get == e
@@ -32,24 +32,18 @@ object Util {
   }
 
   private def turnsEndIn(turns: List[Turn]): Try[GameEnd] =
-    takeTurns(Quarto())(turns).fold(f => Failure(f), {
+    takeTurns(Quarto())(turns).flatMap({
       case FinalQuarto(_, state) => Success(state)
       case _ => Failure(new Exception("Bad Test. Game didn't end."))
     })
 
-  //TODO I call the quarto constructors here. Anyway to get rid of that without wrapping?
   def takeTurns(q0: Quarto)(turns: List[Turn]): Try[Quarto] =
     turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
-      tryGame.fold(f => Failure(f), game =>
-        (game, turn) match {
-          case (PassQuarto(b), Pass(person, piece)) =>
-            PassQuarto(b).passPiece(person, piece)
-          case (PlaceQuarto(b, p), Place(person, tile)) =>
-            PlaceQuarto(b, p).fold(f => Failure(f), _.placePiece(person, tile))
-              .map({
-                case Left(inprogGame) => inprogGame
-                case Right(endGame) => endGame
-              })
+      tryGame.flatMap(game => (game, turn) match {
+          case (passQ: PassQuarto, Pass(person, piece)) =>
+            passQ.passPiece(person, piece)
+          case (placeQ: PlaceQuarto, Place(person, tile)) =>
+            placeQ.placePiece(person, tile).map(_.merge)
           case _ => Failure(new Exception("Bad Test. The game does not have that method."))
         })
     })

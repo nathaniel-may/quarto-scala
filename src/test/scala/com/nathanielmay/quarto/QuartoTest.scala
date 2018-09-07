@@ -8,9 +8,9 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
 
-  "a Quarto game"  should "be None with active that is already placed" in {
+  "a Quarto game"  should "fail with active that is already placed" in {
     val tiles = Map(Tile(I1, I2) -> WLQF, Tile(I2, I2) -> BSRH)
-    assert(PlaceQuarto(Board(tiles).get, Some(WLQF)).failed.get == InvalidPieceForOpponentError)
+    assert(PlaceQuarto(Board(tiles).get, WLQF).failed.get == InvalidPieceForOpponentError)
   }
 
   it should "should be valid without active piece if game is won" in {
@@ -39,14 +39,6 @@ class QuartoTest extends FlatSpec with Matchers {
     assert(q1.get == q2.get)
     assert(q1 == q2)
 
-  }
-
-  it should "should be valid without active piece if board is won" in {
-    val tiles = Map(Tile(I0, I0) -> WLQF,
-      Tile(I0, I1) -> BLQF,
-      Tile(I0, I2) -> BLRH,
-      Tile(I0, I3) -> WLQH)
-    assert(successQuarto(Board(tiles), None))
   }
 
   it should "recognize a horizontal win" in {
@@ -125,7 +117,7 @@ class QuartoTest extends FlatSpec with Matchers {
       .getOrElse(fail())
       .placePiece(P2, Tile(I1, I2))
       .getOrElse(fail()) match {
-      case Right(FinalQuarto(_)) => fail()
+      case Right(FinalQuarto(_, _)) => fail()
       case _ =>
     }
   }
@@ -154,34 +146,6 @@ class QuartoTest extends FlatSpec with Matchers {
       Pass(P1, WLQF),
       Place(P1, Tile(I0, I0)),
       Pass(P1, BLQF)))
-  }
-
-  it should "fail when player 2 tries to go first" in {
-    expectError(OutOfTurnError)(List(Pass(P2, WLQF)))
-  }
-
-  it should "accept valid active piece for winning move" in {
-    assertWin(List(
-      Pass(P1, WLQF),
-      Place(P2, Tile(I0, I0)),
-      Pass(P2, BLQF),
-      Place(P1, Tile(I0, I1)),
-      Pass(P1, BLRH),
-      Place(P2, Tile(I0, I2)),
-      Pass(P2, WLQH),
-      Place(P1, Tile(I0, I3))))
-  }
-
-  it should "accept None forOpponent for winning move" in {
-    assertWin(List(
-      Pass(P1, WLQF),
-      Place(P2, Tile(I0, I0)),
-      Pass(P2, BLQF),
-      Place(P1, Tile(I0, I1)),
-      Pass(P1, BLRH),
-      Place(P2, Tile(I0, I2)),
-      Pass(P2, WLQH),
-      Place(P1, Tile(I0, I3))))
   }
 
   it should "cannot pass a piece after placing a winning piece" in {
