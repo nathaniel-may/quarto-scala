@@ -37,7 +37,7 @@ object Util {
       case _ => Failure(new Exception("Bad Test. Game didn't end."))
     })
 
-  def takeTurns(q0: Quarto)(turns: List[Turn]): Try[Quarto] =
+  def takeTurns(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
     turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
       tryGame.flatMap(game => (game, turn) match {
           case (passQ: PassQuarto, Pass(person, piece)) =>
@@ -47,8 +47,24 @@ object Util {
           case _ => Failure(new Exception("Bad Test. The game does not have that method."))
         })
     })
+
+  def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {
+    def playerSeq(n: Int): List[Player] =
+      List.tabulate(n)(i => if (i % 2 == 0) P1 else P2)
+
+    (playerSeq(tiles.size), tiles, pieces)
+      .zipped.toList
+      .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(player.switch, t))}
+  }
+
+  private implicit class switchablePlayer(p: Player){
+    def switch: Player = p match {
+      case P1 => P2
+      case P2 => P1
+    }
+  }
 }
 
-sealed abstract class Turn
+sealed trait Turn
 case class Pass(person: Player, forOpponent: Piece) extends Turn
 case class Place(person: Player, tile: Tile) extends Turn

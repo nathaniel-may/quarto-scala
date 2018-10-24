@@ -4,7 +4,7 @@ package com.nathanielmay.quarto
 import com.nathanielmay.quarto.Exceptions.InvalidPieceForOpponentError
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll}
-import testingUtil.Arbitrarily.{aPiece, aTile}
+import testingUtil.Arbitrarily.{aPiece, aTile, aGame}
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -17,23 +17,13 @@ object QuartoProperties extends Properties("Quarto") {
   }
 
   property("game played with turns and constructed from map are equal") = forAll {
-    (t1: Tile, t2: Tile, p1: Piece, p2: Piece) =>
-      (t1 != t2 && p1 != p2) ==> (for {
-        b <- Board(Map(t1 -> p1, t2 -> p2))
-      } yield PlaceQuarto(b, p1))
-        .fold(_ == InvalidPieceForOpponentError, _ => false)
+    game: Quarto => (game match {
+      case PassQuarto(b)     => PassQuarto(b)
+      case PlaceQuarto(b, p) => PlaceQuarto(b, p).get
+      case FinalQuarto(b, s) => FinalQuarto(b, s)
+    }) == game
   }
 
-}
-
-object m{
-  import testingUtil.Pieces._
-  def main(args: Array[String]): Unit = {
-
-    Board(Map(Tile(I1,I0) -> WSRH, Tile(I3,I3) -> BSRF))
-      .flatMap(b => PlaceQuarto(b, WSRH))
-      .fold(e => print(e), _ => print("HOORAY"))
-  }
 }
 
   //TODO checklist
