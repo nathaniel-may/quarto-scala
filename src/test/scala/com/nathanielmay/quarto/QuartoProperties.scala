@@ -1,10 +1,13 @@
 package com.nathanielmay.quarto
 
 //scalacheck
-import com.nathanielmay.quarto.Exceptions.InvalidPieceForOpponentError
+import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, OutOfTurnError}
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll}
-import testingUtil.Arbitrarily.{aPiece, aTile, aGame}
+import testingUtil.Arbitrarily.{a3PieceGame, aGame, aPiece, aTile}
+import testingUtil.Arbitrarily.Q3
+import testingUtil.{Pass, Place}
+import testingUtil.Util.takeTurns
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -24,24 +27,52 @@ object QuartoProperties extends Properties("Quarto") {
     }) == game
   }
 
+
+  property("a game with less than 4 pieces cannot be won") = forAll {
+    q3: Q3 => q3.game match {
+      case _: FinalQuarto => false
+      case _              => true
+    }
+  }
+
+  property("player 2 cannot take the first turn") = forAll {
+    p: Piece => Quarto().passPiece(P2, p)
+      .fold(_ == OutOfTurnError, _ => false)
+  }
+
+  property("player 1 cannot pass and place") = forAll {
+    (t: Tile, p: Piece) => (for {
+      q1 <- Quarto().passPiece(P1, p)
+      q2 <- q1.placePiece(P1, t).map(_.merge)
+    } yield q2).fold(_ == OutOfTurnError, _ => false)
+  }
+
+  property("player 2 cannot pass and place") = forAll {
+    (t1: Tile, t2: Tile, p1: Piece, p2: Piece) =>
+      (t1 != t2 && p1 != p2) ==> {
+        takeTurns()(List(
+          Pass (P1, p1),
+          Place(P2, t1),
+          Pass (P2, p2),
+          Place(P2, t2)))
+          .fold(_ == OutOfTurnError, _ => false  )
+      }
+
+
+    //.fold(_ == OutOfTurnError, _ => false  )
+  }
 }
 
-  //TODO checklist
-//  "should be valid without active piece if game is won"
+//  TODO checklist
 //  "recognize a horizontal win"
 //  "recognize a vertical win"
 //  "recognize a diagonal0 win"
-//"recognize a diagonal1 win"
-//"recognize a multi-line win"
-//"not recognize a new game as won"
-//"not recognize a game with one placed piece as won"
+//  "recognize a diagonal1 win"
+//  "recognize a multi-line win"
 //
-//  "a Turn" should "fail when giving opponent a piece that is already placed"
-//"fail when tile is occupied"
-//"fail when player 2 takes the first turn"
-//"fail when player 1 tries to take a second turn in a row"
-//"cannot pass a piece after placing a winning piece"
-//"accept when all pieces are played and the last piece wins"
-//"register a tie when all pieces are played and the last piece does not win"
-//
+//  "fail when tile is occupied"
+//  "fail when player 1 tries to take a second turn in a row"
+//  "cannot pass a piece after placing a winning piece"
+//  "accept when all pieces are played and the last piece wins"
+//  "register a tie when all pieces are played and the last piece does not win"
 

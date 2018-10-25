@@ -15,7 +15,10 @@ import Util.{takeTurnsAndStop, getTurns}
 object Arbitrarily {
   import Generators._
 
-  implicit val aGame:  Arbitrary[Quarto] = Arbitrary(genGame)
+  case class Q3(game: Quarto)
+
+  implicit val aGame:  Arbitrary[Quarto] = Arbitrary(genAnySizeGame)
+  implicit val a3PieceGame: Arbitrary[Q3] = Arbitrary(genGame(3).flatMap(q => Q3(q)))
   implicit val aPiece: Arbitrary[Piece]  = Arbitrary(oneOf(pieceList))
   implicit val aTile:  Arbitrary[Tile]   = Arbitrary(oneOf(tileList))
   implicit val aColor: Arbitrary[Color]  = Arbitrary(oneOf(colors))
@@ -39,8 +42,11 @@ object Arbitrarily {
       v <- indexes
     } yield Tile(h, v)
 
-    val genGame: Gen[Quarto] = for {
-      turns  <- choose(0, pieceList.size)
+    val genAnySizeGame: Gen[Quarto] =
+      choose(0, pieceList.size).flatMap(n => genGame(n))
+
+    def genGame(n: Int): Gen[Quarto] = for {
+      turns  <- choose(0, n) //takeTurnsAndStop handles n > 16
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
     } yield takeTurnsAndStop()(getTurns(tiles, pieces)).get //todo better way?
