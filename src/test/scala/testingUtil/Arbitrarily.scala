@@ -3,22 +3,27 @@ package testingUtil
 //scala check
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{pick, choose, oneOf}
+import org.scalacheck.Gen.{choose, oneOf, pick}
 
 //project
-import com.nathanielmay.quarto.{Quarto, Tile, Piece, Color, Shape, Size, Top}
+import com.nathanielmay.quarto.{Quarto, FinalQuarto, PassQuarto, PlaceQuarto, Tile, Piece, Color, Shape, Size, Top}
 import com.nathanielmay.quarto.{White, Black, Round, Square, Large, Small, Flat, Hole}
 import com.nathanielmay.quarto.{I0, I1, I2, I3}
 import Pieces._
-import Util.{takeTurnsAndStop, getTurns}
+import Util.{takeTurn, takeTurnsAndStop, getTurns}
+
+//scala
+import scala.util.{Try, Success, Failure}
 
 object Arbitrarily {
   import Generators._
 
   case class Q3(game: Quarto)
+  case class Q16(game: Quarto)
 
   implicit val aGame:  Arbitrary[Quarto] = Arbitrary(genAnySizeGame)
   implicit val a3PieceGame: Arbitrary[Q3] = Arbitrary(genGame(3).flatMap(q => Q3(q)))
+  implicit val aCompletedGame: Arbitrary[FinalQuarto] = Arbitrary(genFinalGame)
   implicit val aPiece: Arbitrary[Piece]  = Arbitrary(oneOf(pieceList))
   implicit val aTile:  Arbitrary[Tile]   = Arbitrary(oneOf(tileList))
   implicit val aColor: Arbitrary[Color]  = Arbitrary(oneOf(colors))
@@ -50,6 +55,33 @@ object Arbitrarily {
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
     } yield takeTurnsAndStop()(getTurns(tiles, pieces)).get //todo better way?
+
+    def nextTurns(q: Quarto): List[Turn] = {
+      q match {
+        case passQ: PassQuarto =>
+          pieceList.filter(p => passQ.board.contains(p)).map(Pass(passQ.player, _))
+        case placeQ: PlaceQuarto =>
+          tileList.filter(t => placeQ.board.contains(t)).map(Place(placeQ.player, _))
+        case _: FinalQuarto => List()
+      }
+    }
+
+    val genFinalGame: Gen[FinalQuarto] = {
+      def go(q: Quarto, visited: List[Quarto]): List[Quarto] = {
+        if (visited.contains(q)) visited
+        else nextTurns(q)
+          .map(takeTurn(q))
+          .map(_.get)
+          .filterNot(visited.contains)
+          .foldLeft(q :: visited)((b, a) => go(a, b))
+      }
+
+      oneOf(go(Quarto(), List()).foldLeft[List[FinalQuarto]](List()){
+        (finals, game) => game match {
+          case q: FinalQuarto => q :: finals
+          case _ => finals
+        }})
+    }
 
   }
 

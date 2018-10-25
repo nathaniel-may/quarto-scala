@@ -9,10 +9,10 @@ import com.nathanielmay.quarto.Exceptions.{
   OutOfTurnError}
 
 case object Quarto{
-  private val hLines  = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
-  private val vLines  = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
-  private val dLines  = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
-                             Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => Tile(h, v)}))
+  val hLines: List[List[Tile]]  = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
+  val vLines: List[List[Tile]]  = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
+  val dLines: List[List[Tile]] = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
+                                      Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => Tile(h, v)}))
   //TODO add squares variant
   private val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 

@@ -1,13 +1,13 @@
 package com.nathanielmay.quarto
 
 //scalacheck
-import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, OutOfTurnError}
+import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 import org.scalacheck.Properties
-import org.scalacheck.Prop.{BooleanOperators, forAll}
-import testingUtil.Arbitrarily.{a3PieceGame, aGame, aPiece, aTile}
+import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
+import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile}
 import testingUtil.Arbitrarily.Q3
-import testingUtil.{Pass, Place}
-import testingUtil.Util.takeTurns
+import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
+import testingUtil.Util.{takeTurns, wonWith}
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -55,11 +55,30 @@ object QuartoProperties extends Properties("Quarto") {
           Place(P2, t1),
           Pass (P2, p2),
           Place(P2, t2)))
-          .fold(_ == OutOfTurnError, _ => false  )
+          .fold(_ == OutOfTurnError, _ => false)
       }
+  }
 
+  property("cannot place piece on an occupied tile") = forAll {
+    (t: Tile, p1: Piece, p2: Piece) => (p1 != p2) ==>
+      takeTurns()(List(
+        Pass (P1, p1),
+        Place(P2, t),
+        Pass (P2, p2),
+        Place(P1, t)))
+        .fold(_ == InvalidPlacementError, _ => false)
+  }
 
-    //.fold(_ == OutOfTurnError, _ => false  )
+  property("recognizes a diagonal win") = exists {
+    game: FinalQuarto => wonWith(game).contains(Diagonal)
+  }
+
+  property("recognizes a horizontal win") = exists {
+    game: FinalQuarto => wonWith(game).contains(Horizontal)
+  }
+
+  property("recognizes a vertical win") = exists {
+    game: FinalQuarto => wonWith(game).contains(Vertical)
   }
 }
 
@@ -70,9 +89,8 @@ object QuartoProperties extends Properties("Quarto") {
 //  "recognize a diagonal1 win"
 //  "recognize a multi-line win"
 //
-//  "fail when tile is occupied"
-//  "fail when player 1 tries to take a second turn in a row"
 //  "cannot pass a piece after placing a winning piece"
 //  "accept when all pieces are played and the last piece wins"
+
 //  "register a tie when all pieces are played and the last piece does not win"
 

@@ -1,6 +1,6 @@
 package testingUtil
 
-import com.nathanielmay.quarto.{Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
+import com.nathanielmay.quarto.{Attribute, Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
 
 import scala.util.{Failure, Success, Try}
 
@@ -37,19 +37,21 @@ object Util {
       case _ => Failure(new Exception("Bad Test. Game didn't end."))
     })
 
+  def takeTurn(game: Quarto)(t: Turn): Try[Quarto] =
+    (game, t) match {
+      case (passQ: PassQuarto, Pass(person, piece)) =>
+        passQ.passPiece(person, piece)
+      case (placeQ: PlaceQuarto, Place(person, tile)) =>
+        placeQ.placePiece(person, tile).map(_.merge)
+      case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
+      case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
+      case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
+      case _                         => Failure(new Exception("cannot make this move on this kind of board"))
+    }
+
   def takeTurns(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
-    turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
-      tryGame.flatMap(game => (game, turn) match {
-          case (passQ: PassQuarto, Pass(person, piece)) =>
-            passQ.passPiece(person, piece)
-          case (placeQ: PlaceQuarto, Place(person, tile)) =>
-            placeQ.placePiece(person, tile).map(_.merge)
-          case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
-          case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
-          case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
-          case _                         => Failure(new Exception("cannot make this move on this kind of board"))
-        })
-    })
+    turns.foldLeft[Try[Quarto]](Success(q0))((tryGame, turn) =>
+      tryGame.flatMap(game => takeTurn(game)(turn)))
 
   def takeTurnsAndStop(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
     turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
@@ -62,6 +64,7 @@ object Util {
       })
     })
 
+  //TODO is this used anymore?
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {
     def playerSeq(n: Int): List[Player] =
       List.tabulate(n)(i => if (i % 2 == 0) P1 else P2)
@@ -71,6 +74,23 @@ object Util {
       .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(player.switch, t))}
   }
 
+  def wonWith(game: FinalQuarto): List[Line] = {
+    import Quarto.{hLines, vLines, dLines}
+    
+    def wins(line: List[Tile]): Boolean =
+      line.flatMap(piece => game.board.get(piece))
+        .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
+        piece.attrs.foldLeft(counts)((m, attr) =>
+          m.updated(attr, m.getOrElse(attr, 0) + 1)))
+        .exists(4 <= _._2)
+
+    for {
+      d <- dLines.filter(wins).map(_ => Diagonal)
+      dh <- d :: hLines.filter(wins).map(_ => Horizontal)
+      dhv <- dh :: vLines.filter(wins).map(_ => Vertical)
+    } yield dhv
+  }
+
   private implicit class switchablePlayer(p: Player){
     def switch: Player = p match {
       case P1 => P2
@@ -78,6 +98,11 @@ object Util {
     }
   }
 }
+
+sealed trait Line
+case object Diagonal extends Line
+case object Horizontal extends Line
+case object Vertical extends Line
 
 sealed trait Turn
 case class Pass(person: Player, forOpponent: Piece) extends Turn
