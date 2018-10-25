@@ -44,8 +44,22 @@ object Util {
             passQ.passPiece(person, piece)
           case (placeQ: PlaceQuarto, Place(person, tile)) =>
             placeQ.placePiece(person, tile).map(_.merge)
-          case _ => Failure(new Exception("Bad Test. The game does not have that method."))
+          case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
+          case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
+          case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
+          case _                         => Failure(new Exception("cannot make this move on this kind of board"))
         })
+    })
+
+  def takeTurnsAndStop(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
+    turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
+      tryGame.flatMap(game => (game, turn) match {
+        case (passQ: PassQuarto, Pass(person, piece)) =>
+          passQ.passPiece(person, piece)
+        case (placeQ: PlaceQuarto, Place(person, tile)) =>
+          placeQ.placePiece(person, tile).map(_.merge)
+        case (q: Quarto, _) => Success(q)
+      })
     })
 
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {

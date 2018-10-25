@@ -10,7 +10,7 @@ import com.nathanielmay.quarto.{Quarto, Tile, Piece, Color, Shape, Size, Top}
 import com.nathanielmay.quarto.{White, Black, Round, Square, Large, Small, Flat, Hole}
 import com.nathanielmay.quarto.{I0, I1, I2, I3}
 import Pieces._
-import Util.{takeTurns, getTurns}
+import Util.{takeTurnsAndStop, getTurns}
 
 object Arbitrarily {
   import Generators._
@@ -43,7 +43,7 @@ object Arbitrarily {
       turns  <- choose(0, pieceList.size)
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
-    } yield takeTurns()(getTurns(tiles, pieces)).get //todo better way?
+    } yield takeTurnsAndStop()(getTurns(tiles, pieces)).get //todo better way?
 
   }
 
