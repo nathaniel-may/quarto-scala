@@ -12,9 +12,6 @@ import com.nathanielmay.quarto.{I0, I1, I2, I3}
 import Pieces._
 import Util.{takeTurn, takeTurnsAndStop, getTurns}
 
-//scala
-import scala.util.{Try, Success, Failure}
-
 object Arbitrarily {
   import Generators._
 
@@ -66,7 +63,8 @@ object Arbitrarily {
       }
     }
 
-    val genFinalGame: Gen[FinalQuarto] = {
+    //TODO flip back to val once I get it working
+    def genFinalGame: Gen[FinalQuarto] = {
       def go(q: Quarto, visited: List[Quarto]): List[Quarto] = {
         if (visited.contains(q)) visited
         else nextTurns(q)
@@ -84,13 +82,6 @@ object Arbitrarily {
     }
 
   }
-
-//  //TODO fix z param
-//  def sequence[A](l: List[Gen[A]]): Gen[List[A]] =
-//    l.foldRight[Gen[List[A]]](Gen.oneOf(List(List())))((x,y) => map2(x,y)(_ :: _))
-//
-//  def map2[A, B, C](a: Gen[A], b: Gen[B])(f: (A, B) => C): Gen[C] =
-//    a.flatMap { x => b.map {y => f(x, y)} }
 
 }
 

@@ -76,7 +76,7 @@ object Util {
 
   def wonWith(game: FinalQuarto): List[Line] = {
     import Quarto.{hLines, vLines, dLines}
-    
+
     def wins(line: List[Tile]): Boolean =
       line.flatMap(piece => game.board.get(piece))
         .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
