@@ -12,8 +12,8 @@ object QuartoProperties extends Properties("Quarto") {
     (t1: Tile, t2: Tile, p1: Piece, p2: Piece) =>
       (t1 != t2 && p1 != p2) ==> (for {
         b <- Board(Map(t1 -> p1, t2 -> p2))
-      } yield PlaceQuarto(b, p1))
-        .fold(_ == InvalidPieceForOpponentError, _ => false)
+        q <- PlaceQuarto(b, p1)
+      } yield q).fold(_ == InvalidPieceForOpponentError, _ => false)
   }
 
   property("game played with turns and constructed from map are equal") = forAll {
@@ -28,7 +28,6 @@ object QuartoProperties extends Properties("Quarto") {
 
   //TODO checklist
 //  "should be valid without active piece if game is won"
-//  "be equal to a game from saved state"
 //  "recognize a horizontal win"
 //  "recognize a vertical win"
 //  "recognize a diagonal0 win"
