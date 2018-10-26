@@ -41,33 +41,14 @@ object Util {
       }
   }
 
-  def successQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
-    forOpponent match {
-      case None => quartoFrom(board).isSuccess
-      case Some(p) => quartoFrom(board, p).isSuccess
-    }
-
-  def quartoFrom(board: Try[Board]): Try[Quarto] =
-    board.flatMap(b => Success(PassQuarto(b)))
-
-  def quartoFrom(board: Try[Board], forOpponent: Piece): Try[Quarto] =
-    board.flatMap(b => PlaceQuarto(b, forOpponent))
-
-  def expectError(e: Exception)(turns: List[Turn]): Boolean =
-    quarto.takeTurns(turns).failed.get == e
-
-  def assertResult(turns: List[Turn])(f: GameEnd => Boolean): Unit = {
-    quarto.turnsEndResult(turns) match {
-      case None => assert(false)
-      case Some(end) => assert(f(end))
+  // Using implicit because this function is only useful for internal testing
+  private implicit class switchablePlayer(p: Player){
+    def switch: Player = p match {
+      case P1 => P2
+      case P2 => P1
     }
   }
 
-  def assertWin(turns: List[Turn]): Unit = assertResult(turns)(r => r == Winner(P1) || r == Winner(P2))
-
-  def assertTie(turns: List[Turn]): Unit = assertResult(turns)(_ == Tie)
-
-  //TODO is this used anymore?
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {
     def playerSeq(n: Int): List[Player] =
       List.tabulate(n)(i => if (i % 2 == 0) P1 else P2)
@@ -94,12 +75,32 @@ object Util {
     } yield dhv
   }
 
-  private implicit class switchablePlayer(p: Player){
-    def switch: Player = p match {
-      case P1 => P2
-      case P2 => P1
+  def validQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
+    forOpponent match {
+      case None => quartoFrom(board).isSuccess
+      case Some(p) => quartoFrom(board, p).isSuccess
+    }
+
+  def quartoFrom(board: Try[Board]): Try[Quarto] =
+    board.flatMap(b => Success(PassQuarto(b)))
+
+  def quartoFrom(board: Try[Board], forOpponent: Piece): Try[Quarto] =
+    board.flatMap(b => PlaceQuarto(b, forOpponent))
+
+  def expectError(e: Exception)(turns: List[Turn]): Boolean =
+    quarto.takeTurns(turns).failed.get == e
+
+  def assertResult(turns: List[Turn])(f: GameEnd => Boolean): Unit = {
+    quarto.turnsEndResult(turns) match {
+      case None => assert(false)
+      case Some(end) => assert(f(end))
     }
   }
+
+  def assertWin(turns: List[Turn]): Unit = assertResult(turns)(r => r == Winner(P1) || r == Winner(P2))
+
+  def assertTie(turns: List[Turn]): Unit = assertResult(turns)(_ == Tie)
+
 }
 
 sealed trait Line

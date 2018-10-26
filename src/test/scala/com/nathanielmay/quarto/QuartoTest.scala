@@ -19,7 +19,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Tile(I0, I1) -> BLQF,
       Tile(I0, I2) -> BLRH,
       Tile(I0, I3) -> WLQH)
-    assert(successQuarto(Board(tiles), None))
+    assert(validQuarto(Board(tiles), None))
   }
 
   it should "be equal to a game from saved state" in {
