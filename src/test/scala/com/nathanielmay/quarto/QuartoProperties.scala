@@ -84,17 +84,13 @@ object QuartoProperties extends Properties("Quarto") {
   property("recognizes a tie game") = exists {
     game: FinalQuarto => game.state == Tie
   }
+
+  property("recognizes a multi-line win") = exists {
+    game: FinalQuarto => wonWith(game).size > 1
+  }
+
+  property("recognizes a win with the last piece") = exists {
+    game: FinalQuarto => game.board.isFull
+  }
 }
-
-//  TODO checklist
-//  "recognize a horizontal win"
-//  "recognize a vertical win"
-//  "recognize a diagonal0 win"
-//  "recognize a diagonal1 win"
-//  "recognize a multi-line win"
-//
-//  "cannot pass a piece after placing a winning piece"
-//  "accept when all pieces are played and the last piece wins"
-
-//  "register a tie when all pieces are played and the last piece does not win"
 
