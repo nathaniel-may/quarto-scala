@@ -80,6 +80,10 @@ object QuartoProperties extends Properties("Quarto") {
   property("recognizes a vertical win") = exists {
     game: FinalQuarto => wonWith(game).contains(Vertical)
   }
+
+  property("recognizes a tie game") = exists {
+    game: FinalQuarto => game.state == Tie
+  }
 }
 
 //  TODO checklist
