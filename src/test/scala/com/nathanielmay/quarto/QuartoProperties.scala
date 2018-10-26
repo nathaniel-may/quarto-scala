@@ -4,6 +4,8 @@ package com.nathanielmay.quarto
 import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
+
+//testing
 import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile}
 import testingUtil.Arbitrarily.Q3
 import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
