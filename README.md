@@ -1,8 +1,12 @@
 # quarto-scala
 
-Representation of the board game Quarto using functional programming in Scala  
+Representation of the board game Quarto using functional programming in Scala
 
-The implementation is designed to be easily ported to the following stack 
+Testing Frameworks:
+  + Unit Tests             - ScalaTest
+  + Property-based Testing - ScalaCheck
+
+The implementation is designed for the following stack
   + Web UI (TBD)
   + AWS Lambda
   + MongoDB Atlas
