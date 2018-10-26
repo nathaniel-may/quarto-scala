@@ -16,6 +16,8 @@ case object Quarto{
   //TODO add squares variant
   private val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 
+  val quarto: PassQuarto = Quarto()
+
   def apply(): PassQuarto = PassQuarto(Board())
 
   def isWon(board: Board): Boolean = {
