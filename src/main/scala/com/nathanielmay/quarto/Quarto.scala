@@ -121,7 +121,9 @@ case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto(boa
   * @param board locations of all placed pieces
   * @param state denotes the winning player or a tie
   */
-case class FinalQuarto(board: Board, state: GameEnd) extends Quarto(board, None)
+case class FinalQuarto(board: Board, state: GameEnd) extends Quarto(board, None){
+  override def toString: String = s"$state!\n$board"
+}
 
 /** singleton objects representing player 1 and player 2
   *
