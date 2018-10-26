@@ -9,8 +9,9 @@ import org.scalacheck.Gen.{choose, oneOf, pick}
 import com.nathanielmay.quarto.{Quarto, FinalQuarto, PassQuarto, PlaceQuarto, Tile, Piece, Color, Shape, Size, Top}
 import com.nathanielmay.quarto.{White, Black, Round, Square, Large, Small, Flat, Hole}
 import com.nathanielmay.quarto.{I0, I1, I2, I3}
+import com.nathanielmay.quarto.Quarto.quarto
 import Pieces._
-import Util.{takeTurn, takeTurnsAndStop, getTurns}
+import Util.{testableQuarto, getTurns}
 
 object Arbitrarily {
   import Generators._
@@ -51,7 +52,7 @@ object Arbitrarily {
       turns  <- choose(0, n) //takeTurnsAndStop handles n > 16
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
-    } yield takeTurnsAndStop()(getTurns(tiles, pieces)).get //todo better way?
+    } yield quarto.takeTurnsAndStop(getTurns(tiles, pieces)).get //todo better way?
 
     def nextTurns(q: Quarto): List[Turn] = {
       q match {
@@ -67,7 +68,7 @@ object Arbitrarily {
       def go(gen: Either[Gen[Quarto], Gen[FinalQuarto]]): Gen[FinalQuarto] = gen match {
         case Right(end) => end
         case Left(game) => game
-          .flatMap(q => oneOf(nextTurns(q)).map(takeTurn(q)))
+          .flatMap(q => oneOf(nextTurns(q)).map(q.takeTurn))
           .map(_.get) //TODO better way to do this?
           .flatMap {
             case end: FinalQuarto => go(Right(end))
@@ -75,7 +76,7 @@ object Arbitrarily {
           }
         }
 
-      go(Left(Quarto()))
+      go(Left(quarto))
     }
 
   }

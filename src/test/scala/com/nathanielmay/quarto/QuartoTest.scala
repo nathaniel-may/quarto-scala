@@ -1,6 +1,7 @@
 package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.Exceptions.{GameOverError, InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
+import com.nathanielmay.quarto.Quarto.quarto
 import testingUtil.Pieces._
 import testingUtil.{Pass, Place}
 import testingUtil.Util._
@@ -22,7 +23,7 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "be equal to a game from saved state" in {
-    val q1 = takeTurns(Quarto())(List(
+    val q1 = quarto.takeTurns(List(
       Pass(P1, WLQF),
       Place(P2, Tile(I1, I2)),
       Pass(P2, BLQF),
@@ -32,7 +33,7 @@ class QuartoTest extends FlatSpec with Matchers {
       Tile(I1, I2) -> Piece(White, Large, Square, Flat),
       Tile(I2, I2) -> Piece(Black, Large, Square, Flat))
 
-    val q2 = quarto(Board(tiles))
+    val q2 = quartoFrom(Board(tiles))
 
     assert(q1.isSuccess)
     assert(q2.isSuccess)
@@ -108,11 +109,11 @@ class QuartoTest extends FlatSpec with Matchers {
   }
 
   it should "not recognize a new game as won" in {
-    assert(!Quarto.isWon(Quarto().board))
+    assert(!Quarto.isWon(quarto.board))
   }
 
   it should "not recognize a game with one placed piece as won" in {
-    Quarto()
+    quarto
       .passPiece(P1, WLQF)
       .getOrElse(fail())
       .placePiece(P2, Tile(I1, I2))

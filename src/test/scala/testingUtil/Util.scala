@@ -1,68 +1,71 @@
 package testingUtil
 
 import com.nathanielmay.quarto.{Attribute, Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
+import com.nathanielmay.quarto.Quarto.quarto
 
 import scala.util.{Failure, Success, Try}
 
 object Util {
 
-  def successQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
-    forOpponent match {
-      case None => quarto(board).isSuccess
-      case Some(p) => quarto(board, p).isSuccess
-    }
-
-  def quarto(board: Try[Board]): Try[Quarto] =
-    board.flatMap(b => Success(PassQuarto(b)))
-
-  def quarto(board: Try[Board], forOpponent: Piece): Try[Quarto] =
-    board.flatMap(b => PlaceQuarto(b, forOpponent))
-
-  def expectError(e: Exception)(turns: List[Turn]): Boolean =
-    takeTurns(Quarto())(turns).failed.get == e
-
-  def assertWin(turns: List[Turn]): Unit = {
-    turnsEndIn(turns).fold(
-      _ => assert(false),
-      state => assert(state == Winner(P1) || state == Winner(P2)))
-  }
-
-  def assertTie(turns: List[Turn]): Unit = {
-    turnsEndIn(turns).fold(_ => assert(false) , result => assert(result == Tie))
-  }
-
-  private def turnsEndIn(turns: List[Turn]): Try[GameEnd] =
-    takeTurns(Quarto())(turns).flatMap({
-      case FinalQuarto(_, state) => Success(state)
-      case _ => Failure(new Exception("Bad Test. Game didn't end."))
-    })
-
-  def takeTurn(game: Quarto)(t: Turn): Try[Quarto] =
-    (game, t) match {
-      case (passQ: PassQuarto, Pass(person, piece)) =>
-        passQ.passPiece(person, piece)
-      case (placeQ: PlaceQuarto, Place(person, tile)) =>
-        placeQ.placePiece(person, tile).map(_.merge)
-      case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
-      case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
-      case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
-      case _                         => Failure(new Exception("cannot make this move on this kind of board"))
-    }
-
-  def takeTurns(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
-    turns.foldLeft[Try[Quarto]](Success(q0))((tryGame, turn) =>
-      tryGame.flatMap(game => takeTurn(game)(turn)))
-
-  def takeTurnsAndStop(q0: Quarto = Quarto())(turns: List[Turn]): Try[Quarto] =
-    turns.foldLeft[Try[Quarto]](Success(q0))({ case (tryGame, turn) =>
-      tryGame.flatMap(game => (game, turn) match {
+  implicit class testableQuarto(game: Quarto){
+    def takeTurn(t: Turn): Try[Quarto] =
+      (game, t) match {
         case (passQ: PassQuarto, Pass(person, piece)) =>
           passQ.passPiece(person, piece)
         case (placeQ: PlaceQuarto, Place(person, tile)) =>
           placeQ.placePiece(person, tile).map(_.merge)
-        case (q: Quarto, _) => Success(q)
-      })
-    })
+        case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
+        case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
+        case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
+        case _                         => Failure(new Exception("cannot make this move on this kind of board"))
+      }
+
+    def takeTurns(turns: List[Turn]): Try[Quarto] =
+      turns.foldLeft[Try[Quarto]](Success(game))((tryGame, turn) =>
+        tryGame.flatMap(_.takeTurn(turn)))
+
+    def takeTurnsAndStop(turns: List[Turn]): Try[Quarto] =
+      turns.foldLeft[Try[Quarto]](Success(game)) { (tryGame, turn) =>
+        tryGame.flatMap(g => (g, turn) match {
+          case (passQ: PassQuarto, Pass(person, piece)) =>
+            passQ.passPiece(person, piece)
+          case (placeQ: PlaceQuarto, Place(person, tile)) =>
+            placeQ.placePiece(person, tile).map(_.merge)
+          case (q: Quarto, _) => Success(q)
+        })}
+
+    def turnsEndResult(turns: List[Turn]): Option[GameEnd] =
+      quarto.takeTurns(turns).fold(_ => None, q => Some(q)).flatMap {
+        case FinalQuarto(_, state) => Some(state)
+        case _ => None
+      }
+  }
+
+  def successQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
+    forOpponent match {
+      case None => quartoFrom(board).isSuccess
+      case Some(p) => quartoFrom(board, p).isSuccess
+    }
+
+  def quartoFrom(board: Try[Board]): Try[Quarto] =
+    board.flatMap(b => Success(PassQuarto(b)))
+
+  def quartoFrom(board: Try[Board], forOpponent: Piece): Try[Quarto] =
+    board.flatMap(b => PlaceQuarto(b, forOpponent))
+
+  def expectError(e: Exception)(turns: List[Turn]): Boolean =
+    quarto.takeTurns(turns).failed.get == e
+
+  def assertResult(turns: List[Turn])(f: GameEnd => Boolean): Unit = {
+    quarto.turnsEndResult(turns) match {
+      case None => assert(false)
+      case Some(end) => assert(f(end))
+    }
+  }
+
+  def assertWin(turns: List[Turn]): Unit = assertResult(turns)(r => r == Winner(P1) || r == Winner(P2))
+
+  def assertTie(turns: List[Turn]): Unit = assertResult(turns)(_ == Tie)
 
   //TODO is this used anymore?
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {

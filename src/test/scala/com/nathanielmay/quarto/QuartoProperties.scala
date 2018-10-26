@@ -1,7 +1,6 @@
 package com.nathanielmay.quarto
 
 //scalacheck
-import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
 
@@ -9,7 +8,12 @@ import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
 import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile}
 import testingUtil.Arbitrarily.Q3
 import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
-import testingUtil.Util.{takeTurns, wonWith}
+import testingUtil.Util.{testableQuarto, wonWith}
+
+//project
+import com.nathanielmay.quarto.Quarto.quarto
+import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
+
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -38,13 +42,13 @@ object QuartoProperties extends Properties("Quarto") {
   }
 
   property("player 2 cannot take the first turn") = forAll {
-    p: Piece => Quarto().passPiece(P2, p)
+    p: Piece => quarto.passPiece(P2, p)
       .fold(_ == OutOfTurnError, _ => false)
   }
 
   property("player 1 cannot pass and place") = forAll {
     (t: Tile, p: Piece) => (for {
-      q1 <- Quarto().passPiece(P1, p)
+      q1 <- quarto.passPiece(P1, p)
       q2 <- q1.placePiece(P1, t).map(_.merge)
     } yield q2).fold(_ == OutOfTurnError, _ => false)
   }
@@ -52,7 +56,7 @@ object QuartoProperties extends Properties("Quarto") {
   property("player 2 cannot pass and place") = forAll {
     (t1: Tile, t2: Tile, p1: Piece, p2: Piece) =>
       (t1 != t2 && p1 != p2) ==> {
-        takeTurns()(List(
+        quarto.takeTurns(List(
           Pass (P1, p1),
           Place(P2, t1),
           Pass (P2, p2),
@@ -63,7 +67,7 @@ object QuartoProperties extends Properties("Quarto") {
 
   property("cannot place piece on an occupied tile") = forAll {
     (t: Tile, p1: Piece, p2: Piece) => (p1 != p2) ==>
-      takeTurns()(List(
+      quarto.takeTurns(List(
         Pass (P1, p1),
         Place(P2, t),
         Pass (P2, p2),
