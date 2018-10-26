@@ -63,23 +63,24 @@ object Arbitrarily {
       }
     }
 
-    //TODO flip back to val once I get it working
-    val genFinalGame: Gen[FinalQuarto] = {
-      def go(q: Quarto, visited: List[Quarto]): List[Quarto] = {
-        if (visited.contains(q)) visited
-        else nextTurns(q)
-          .map(takeTurn(q))
-          .map(_.get)
-          .filterNot(visited.contains)
-          .foldLeft(q :: visited)((b, a) => go(a, b))
-      }
-
-      oneOf(go(Quarto(), List()).foldLeft[List[FinalQuarto]](List()){
-        (finals, game) => game match {
-          case q: FinalQuarto => q :: finals
-          case _ => finals
-        }})
+    def dfs(q: Quarto, visited: List[Quarto]): List[Quarto] = {
+      if (visited.contains(q)) visited
+      else nextTurns(q)
+        .map(takeTurn(q))
+        .map(_.get)
+        .filterNot(visited.contains)
+        .foldLeft(q :: visited)((b, a) => dfs(a, b))
     }
+
+    lazy val allGameStates: List[Quarto] = dfs(Quarto(), List())
+    lazy val allFinalGames: List[FinalQuarto] = allGameStates
+      .foldLeft[List[FinalQuarto]](List()){
+      (finals, game) => game match {
+        case q: FinalQuarto => q :: finals
+        case _ => finals
+      }}
+
+    lazy val genFinalGame: Gen[FinalQuarto] = oneOf(allFinalGames)
 
   }
 
