@@ -56,15 +56,15 @@ object Arbitrarily {
     def nextTurns(q: Quarto): List[Turn] = {
       q match {
         case passQ: PassQuarto =>
-          pieceList.filter(p => passQ.board.contains(p)).map(Pass(passQ.player, _))
+          pieceList.filterNot(p => passQ.board.contains(p)).map(Pass(passQ.player, _))
         case placeQ: PlaceQuarto =>
-          tileList.filter(t => placeQ.board.contains(t)).map(Place(placeQ.player, _))
+          tileList.filterNot(t => placeQ.board.contains(t)).map(Place(placeQ.player, _))
         case _: FinalQuarto => List()
       }
     }
 
     //TODO flip back to val once I get it working
-    def genFinalGame: Gen[FinalQuarto] = {
+    val genFinalGame: Gen[FinalQuarto] = {
       def go(q: Quarto, visited: List[Quarto]): List[Quarto] = {
         if (visited.contains(q)) visited
         else nextTurns(q)
