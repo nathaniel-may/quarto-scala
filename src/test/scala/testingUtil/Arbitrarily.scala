@@ -19,15 +19,16 @@ object Arbitrarily {
   case class Q3(game: Quarto)
   case class Q16(game: Quarto)
 
-  implicit val aGame:  Arbitrary[Quarto] = Arbitrary(genAnySizeGame)
-  implicit val a3PieceGame: Arbitrary[Q3] = Arbitrary(genGame(3).flatMap(q => Q3(q)))
+  implicit val aPiece: Arbitrary[Piece] = Arbitrary(oneOf(pieceList))
+  implicit val aTile:  Arbitrary[Tile]  = Arbitrary(oneOf(tileList))
+  implicit val aColor: Arbitrary[Color] = Arbitrary(oneOf(colors))
+  implicit val aShape: Arbitrary[Shape] = Arbitrary(oneOf(shapes))
+  implicit val aSize:  Arbitrary[Size]  = Arbitrary(oneOf(sizes))
+  implicit val aTop:   Arbitrary[Top]   = Arbitrary(oneOf(tops))
+
+  implicit val aGame:          Arbitrary[Quarto]      = Arbitrary(genAnySizeGame)
+  implicit val a3PieceGame:    Arbitrary[Q3]          = Arbitrary(genGame(3).map(q => Q3(q)))
   implicit val aCompletedGame: Arbitrary[FinalQuarto] = Arbitrary(genFinalGame)
-  implicit val aPiece: Arbitrary[Piece]  = Arbitrary(oneOf(pieceList))
-  implicit val aTile:  Arbitrary[Tile]   = Arbitrary(oneOf(tileList))
-  implicit val aColor: Arbitrary[Color]  = Arbitrary(oneOf(colors))
-  implicit val aShape: Arbitrary[Shape]  = Arbitrary(oneOf(shapes))
-  implicit val aSize:  Arbitrary[Size]   = Arbitrary(oneOf(sizes))
-  implicit val aTop:   Arbitrary[Top]    = Arbitrary(oneOf(tops))
 
   private object Generators {
     val pieceList: List[Piece] =
