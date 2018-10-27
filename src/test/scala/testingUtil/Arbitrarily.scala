@@ -64,19 +64,15 @@ object Arbitrarily {
       }
     }
 
-    lazy val genFinalGame: Gen[FinalQuarto] = {
-      def go(gen: Either[Gen[Quarto], Gen[FinalQuarto]]): Gen[FinalQuarto] = gen match {
-        case Right(end) => end
-        case Left(game) => game
-          .flatMap(q => oneOf(nextTurns(q)).map(q.takeTurn))
-          .map(_.get) //TODO better way to do this?
+    val genFinalGame: Gen[FinalQuarto] = {
+      def go(gen: Gen[Quarto]): Gen[FinalQuarto] =
+        gen.flatMap(q => oneOf(nextTurns(q)).map(t => q.takeTurn(t).get))
           .flatMap {
-            case end: FinalQuarto => go(Right(end))
-            case game: Quarto => go(Left(game))
+            case end: FinalQuarto => end
+            case game: Quarto => go(game)
           }
-        }
 
-      go(Left(quarto))
+      go(quarto)
     }
 
   }
