@@ -52,7 +52,7 @@ object Arbitrarily {
       turns  <- choose(0, n) //takeTurnsAndStop handles n > 16
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
-    } yield quarto.takeTurnsAndStop(getTurns(tiles, pieces)).get //todo better way?
+    } yield quarto.takeTurnsAndStop(getTurns(tiles, pieces)).get
 
     def nextTurns(q: Quarto): List[Turn] = {
       q match {
