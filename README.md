@@ -1,12 +1,5 @@
 # quarto-scala
+[![CircleCI](https://circleci.com/gh/nathaniel-may/quarto-scala.svg?style=svg)](https://circleci.com/gh/nathaniel-may/quarto-scala)
+[![codecov](https://codecov.io/gh/nathaniel-may/quarto-scala/branch/master/graph/badge.svg)](https://codecov.io/gh/nathaniel-may/quarto-scala)
 
-Representation of the board game Quarto using functional programming in Scala
-
-Testing Frameworks:
-  + Unit Tests             - ScalaTest
-  + Property-based Testing - ScalaCheck
-
-The implementation is designed for the following stack
-  + Web UI (TBD)
-  + AWS Lambda
-  + MongoDB Atlas
+I used this project as a fun way to apply the functional programming concepts I learned from the red book and online sources.
