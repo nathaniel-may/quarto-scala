@@ -8,20 +8,20 @@ object Board{
 
   def apply(): Board = new Board(Map())
 
-  /** smart constructor
+  /**
+    * smart constructor
     *
     * @param tiles map identifying the spaces with pieces on them
     * @return board iff map contains a valid game state
     */
   def apply(tiles: Map[Tile, Piece] = Map()): Try[Board] =
-    if (Board.noDuplicatePieces(tiles))
+    if (noDuplicatePieces(tiles))
       Success(new Board(tiles))
     else
       Failure(DuplicatePieceError)
 
   private def noDuplicatePieces(m: Map[Tile, Piece]): Boolean =
     m.map{case (_, v) => (v, Unit)}.size == m.size
-
 }
 
 /** Board for a Quarto game
@@ -31,7 +31,6 @@ object Board{
   * @constructor only called by apply functions
   */
 sealed case class Board private (tiles: Map[Tile, Piece]) {
-  def isEmpty: Boolean = tiles.isEmpty
   def isFull: Boolean = tiles.size >= 16
   def size: Int = tiles.size
   def contains(sq: Tile): Boolean = tiles.contains(sq)
@@ -45,10 +44,10 @@ sealed case class Board private (tiles: Map[Tile, Piece]) {
       ).mkString("|","|","|\n")
     ).mkString
   }
-
 }
 
-/** Space on the board
+/**
+  * Space on the board
   *
   * @param h horizontal index
   * @param v vertical index
