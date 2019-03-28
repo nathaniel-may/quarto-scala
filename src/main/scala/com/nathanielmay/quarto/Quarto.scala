@@ -112,11 +112,10 @@ case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto(boa
       Failure(InvalidPlacementError)
     else
       Board(board.tiles + (tile -> toPlace))
-        .fold[Try[Either[PassQuarto, FinalQuarto]]](
-          f => Failure(f),
-          board => if (Quarto.isWon(board)) Success(Right(FinalQuarto(board, Winner(person))))
-          else if (board.isFull) Success(Right(FinalQuarto(board, Tie)))
-          else Success(Left(PassQuarto(board))))
+        .flatMap { board =>
+          if      (Quarto.isWon(board)) Success(Right(FinalQuarto(board, Winner(person))))
+          else if (board.isFull)        Success(Right(FinalQuarto(board, Tie)))
+          else                          Success(Left(PassQuarto(board))) }
 
   override def toString: String = s"$player needs to place $toPlace on\n$board"
 }
