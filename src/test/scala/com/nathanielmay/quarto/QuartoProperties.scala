@@ -1,16 +1,15 @@
 package com.nathanielmay.quarto
 
-//scalacheck
+// Scalacheck
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
 
-//testing
-import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile}
-import testingUtil.Arbitrarily.Q3
+// Testing
 import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
+import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile, Q3}
 import testingUtil.Util.{testableQuarto, wonWith}
 
-//project
+// Project
 import com.nathanielmay.quarto.Quarto.quarto
 import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 
@@ -97,6 +96,18 @@ object QuartoProperties extends Properties("Quarto") {
 
   property("recognizes a win with the last piece") = exists {
     game: FinalQuarto => game.board.isFull
+  }
+
+  property("prints correctly when a PlaceQuarto") = forAll {
+    game: Quarto => (game match { case _: PlaceQuarto => true; case _ => false }) ==>
+      "^P[12] needs to place [WB][LS][RQ][FH] on\\n\\|.*\\n.*\\n.*\\n.*\\|"
+        .r.findFirstMatchIn(game.toString).fold(false)(_ => true)
+  }
+
+  property("prints correctly when a PassQuarto") = forAll {
+    game: Quarto => (game match { case _: PassQuarto => true; case _ => false }) ==>
+      "^P[12] needs to hand a piece to opponent\\n\\|.*\\n.*\\n.*\\n.*\\|"
+        .r.findFirstMatchIn(game.toString).fold(false)(_ => true)
   }
 }
 

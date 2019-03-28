@@ -1,11 +1,11 @@
 package testingUtil
 
-//scala check
-import org.scalacheck.Arbitrary
+// Scala check
+import org.scalacheck.Arbitrary, Arbitrary.arbBool
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, oneOf, pick}
 
-//project
+// Project
 import com.nathanielmay.quarto.{Quarto, FinalQuarto, PassQuarto, PlaceQuarto, Tile, Piece, Color, Shape, Size, Top}
 import com.nathanielmay.quarto.{White, Black, Round, Square, Large, Small, Flat, Hole}
 import com.nathanielmay.quarto.{I0, I1, I2, I3}
@@ -53,7 +53,10 @@ object Arbitrarily {
       turns  <- choose(0, n) //takeTurnsAndStop handles n > 16
       tiles  <- pick(turns, tileList) map { _.toList }
       pieces <- pick(turns, pieceList) map { _.toList }
-    } yield quarto.takeTurnsAndStop(getTurns(tiles, pieces)).get
+      pass   <- arbBool.arbitrary
+      raw    =  getTurns(tiles, pieces)
+      turns  =  if (pass || raw.isEmpty) raw else raw.init
+    } yield quarto.takeTurnsAndStop(turns).get
 
     def nextTurns(q: Quarto): List[Turn] = {
       q match {

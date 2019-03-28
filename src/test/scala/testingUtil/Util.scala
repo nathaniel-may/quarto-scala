@@ -1,9 +1,11 @@
 package testingUtil
 
+// Scala
+import scala.util.{Failure, Success, Try}
+
+// Project
 import com.nathanielmay.quarto.{Attribute, Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
 import com.nathanielmay.quarto.Quarto.quarto
-
-import scala.util.{Failure, Success, Try}
 
 object Util {
 

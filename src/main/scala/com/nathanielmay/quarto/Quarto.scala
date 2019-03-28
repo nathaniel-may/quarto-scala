@@ -2,7 +2,6 @@ package com.nathanielmay.quarto
 
 import scala.util.{Failure, Success, Try}
 import com.nathanielmay.quarto.Exceptions.{
-  GameOverError,
   InvalidPieceForOpponent,
   InvalidPieceForOpponentError,
   InvalidPlacementError,
