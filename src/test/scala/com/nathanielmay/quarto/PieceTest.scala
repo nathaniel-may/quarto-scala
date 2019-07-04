@@ -1,6 +1,9 @@
 package com.nathanielmay.quarto
 
+// Scalatest
 import org.scalatest.{FlatSpec, Matchers}
+
+// Project
 import testingUtil.Pieces.WLQF
 
 class PieceTest extends FlatSpec with Matchers{

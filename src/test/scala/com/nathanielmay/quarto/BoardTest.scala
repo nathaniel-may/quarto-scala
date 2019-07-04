@@ -1,7 +1,10 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
+// Scalatest
 import org.scalatest.{FlatSpec, Matchers}
+
+// Project
+import Exceptions.DuplicatePieceError
 import testingUtil.Pieces.{WLQF, BLQF}
 
 class BoardTest extends FlatSpec with Matchers{

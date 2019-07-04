@@ -1,10 +1,13 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.Exceptions.{GameOverError, InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
-import testingUtil.Pieces._
-import testingUtil.{Pass, Place}
-import testingUtil.Util._
+// Scalatest
 import org.scalatest.{FlatSpec, Matchers}
+
+// Project
+import Exceptions.{GameOverError, InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
+import testingUtil.{Pass, Place}
+import testingUtil.Pieces._
+import testingUtil.Util._
 
 class QuartoTest extends FlatSpec with Matchers {
 
