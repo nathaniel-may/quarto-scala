@@ -1,6 +1,6 @@
 package com.nathanielmay.quarto
 
-sealed case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
+final case class Piece(color: Color, size: Size, shape: Shape, top: Top) {
   val attrs = List(color, size, shape, top)
   override def toString: String = "" + color + size + shape + top
 }
