@@ -5,7 +5,7 @@ import scala.util.{Failure, Success, Try}
 
 // Project
 import com.nathanielmay.quarto.{Attribute, Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
-import Quarto.{hLines, vLines, dLines}
+import Quarto.{Line, Horizontal, Vertical, Diagonal}
 
 object Util {
 
@@ -68,9 +68,9 @@ object Util {
         .exists(4 <= _._2)
 
     for {
-      d   <- dLines.filter(wins).map { _ => Diagonal }
-      dh  <- d :: hLines.filter(wins).map { _ => Horizontal }
-      dhv <- dh :: vLines.filter(wins).map { _ => Vertical }
+      d   <- Diagonal.lines.filter(wins).map { _ => Diagonal }
+      dh  <- d :: Horizontal.lines.filter(wins).map { _ => Horizontal }
+      dhv <- dh :: Vertical.lines.filter(wins).map { _ => Vertical }
     } yield dhv
   }
 
@@ -101,11 +101,6 @@ object Util {
   def assertTie(turns: List[Turn]): Unit = assertResult(turns)(_ == Tie)
 
 }
-
-sealed trait Line
-case object Diagonal   extends Line
-case object Horizontal extends Line
-case object Vertical   extends Line
 
 sealed trait Turn
 case class Pass(person: Player, forOpponent: Piece) extends Turn

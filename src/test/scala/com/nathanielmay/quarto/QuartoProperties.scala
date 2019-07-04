@@ -5,13 +5,13 @@ import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
 
 // Testing
-import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
+import testingUtil.{Pass, Place}
 import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile, Q3}
 import testingUtil.Util._
 
 // Project
-import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
-
+import Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
+import Quarto.{Horizontal, Vertical, Diagonal}
 
 object QuartoProperties extends Properties("Quarto") {
 

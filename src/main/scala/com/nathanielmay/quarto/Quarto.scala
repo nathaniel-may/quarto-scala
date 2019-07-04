@@ -4,30 +4,56 @@ import scala.util.{Failure, Success, Try}
 import com.nathanielmay.quarto.Exceptions.{
   InvalidPieceForOpponent,
   InvalidPieceForOpponentError,
-  InvalidPlacementError,
   OutOfTurnError}
 
+// TODO add squares variant
 object Quarto {
-  val hLines: List[List[Tile]] = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
-  val vLines: List[List[Tile]] = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
-  val dLines: List[List[Tile]] = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
-                                      Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => Tile(h, v)}))
-  //TODO add squares variant
-  private val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
-
   val empty: PassQuarto = PassQuarto(Board())
 
   def apply(): PassQuarto = empty
 
   def isWon(board: Board): Boolean =
-    allLines.exists {
-      _.flatMap(board.get)
-        .flatMap(_.attrs)
-        .groupBy(identity)
-        .values
-        .map(_.size)
-        .exists(_ >= 4)
-    }
+    wonBy(board).nonEmpty
+
+  def wonBy(board: Board): List[(Attribute, Line)] = {
+    def winningAttrs(line: List[Tile]) = line.flatMap(board.get)
+      .flatMap(_.attrs)
+      .groupBy(identity)
+      .mapValues { _.size }
+      .filter { case (_, count) => count >= 4 }
+      .keys
+
+    (Horizontal.lines
+      .map(winningAttrs)
+      .flatMap { _.map { (_, Horizontal) } } :::
+
+    Vertical.lines
+      .map(winningAttrs)
+      .flatMap { _.map { (_, Vertical) } } :::
+
+    Diagonal.lines
+      .map(winningAttrs)
+      .flatMap { _.map { (_, Diagonal) } })
+  }
+
+  sealed trait Line { val lines: List[List[Tile]] }
+
+  case object Diagonal extends Line {
+    val lines = List(
+      Board.indexes.zip(Board.indexes).map { case (h, v) => Tile(h, v) } ,
+      Board.indexes.zip(Board.indexes.reverse).map { case (h, v) => Tile(h, v) }
+    )
+  }
+
+  case object Horizontal extends Line {
+    val lines = Board.indexes
+      .map { h => Board.indexes.map { Tile(h, _) } }
+  }
+
+  case object Vertical   extends Line {
+    val lines = Board.indexes
+      .map { v => Board.indexes.map { Tile(_, v) } }
+  }
 }
 
 /**
