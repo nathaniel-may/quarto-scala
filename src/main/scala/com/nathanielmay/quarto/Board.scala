@@ -1,7 +1,6 @@
 package com.nathanielmay.quarto
 
 import com.nathanielmay.quarto.Exceptions.{DuplicatePieceError, InvalidPlacementError}
-
 import scala.util.{Failure, Success, Try}
 
 object Board {
@@ -31,7 +30,7 @@ object Board {
   *
   * @constructor only called by apply functions
   */
-sealed case class Board private (tiles: Map[Tile, Piece]) {
+final case class Board private (tiles: Map[Tile, Piece]) {
   def isFull: Boolean = tiles.size >= 16
   def size: Int = tiles.size
   def contains(t: Tile): Boolean = tiles.contains(t)
@@ -62,15 +61,15 @@ sealed case class Board private (tiles: Map[Tile, Piece]) {
   * @param h horizontal index
   * @param v vertical index
   */
-sealed case class Tile(h: Index, v: Index)
+final case class Tile(h: Index, v: Index)
 
 /** Singleton types for board indexes make
   * illegal board locations unrepresentable
   *
-  * @param i value of index
+  * i - value of index
   */
-sealed abstract class Index(val i: Int)
-case object I0 extends Index(0)
-case object I1 extends Index(1)
-case object I2 extends Index(2)
-case object I3 extends Index(3)
+sealed trait Index { val i: Int }
+case object I0 extends Index { val i = 0 }
+case object I1 extends Index { val i = 1 }
+case object I2 extends Index { val i = 2 }
+case object I3 extends Index { val i = 3 }
