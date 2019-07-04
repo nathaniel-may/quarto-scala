@@ -41,12 +41,9 @@ object Util {
       case _ => None
     }
 
-  // Using implicit because this function is only useful for internal testing
-  private implicit class switchablePlayer(p: Player){
-    def switch: Player = p match {
-      case P1 => P2
-      case P2 => P1
-    }
+  private def switch(p: Player): Player = p match {
+    case P1 => P2
+    case P2 => P1
   }
 
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {
@@ -55,7 +52,7 @@ object Util {
 
     (playerSeq(tiles.size), tiles, pieces)
       .zipped.toList
-      .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(player.switch, t))}
+      .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(switch(player), t))}
   }
 
   def wonWith(game: FinalQuarto): List[Line] =
