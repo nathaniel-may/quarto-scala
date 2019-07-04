@@ -12,8 +12,10 @@ object Util {
     (game, t) match {
       case (passQ: PassQuarto, Pass(person, piece)) =>
         passQ.passPiece(person, piece)
+
       case (placeQ: PlaceQuarto, Place(person, tile)) =>
         placeQ.placePiece(person, tile).map(_.merge)
+
       case (_: FinalQuarto, _)       => Failure(new Exception("game is over. no move moves can be made"))
       case (_: PassQuarto, _: Place) => Failure(new Exception("expected to pass a piece. instead got a place turn"))
       case (_: PlaceQuarto, _: Pass) => Failure(new Exception("expected to place a piece. instead got a pass turn"))
@@ -21,18 +23,17 @@ object Util {
     }
 
   def takeTurns(turns: List[Turn], game: Quarto = Quarto()): Try[Quarto] =
-    turns.foldLeft[Try[Quarto]](Success(game))((tryGame, turn) =>
-      tryGame.flatMap(takeTurn(turn, _)))
-
-  def takeTurnsAndStop(turns: List[Turn], game: Quarto = Quarto()): Try[Quarto] =
     turns.foldLeft[Try[Quarto]](Success(game)) { (tryGame, turn) =>
-      tryGame.flatMap(g => (g, turn) match {
-        case (passQ: PassQuarto, Pass(person, piece)) =>
-          passQ.passPiece(person, piece)
-        case (placeQ: PlaceQuarto, Place(person, tile)) =>
-          placeQ.placePiece(person, tile).map(_.merge)
-        case (q: Quarto, _) => Success(q)
-      })}
+      tryGame flatMap { takeTurn(turn, _) }
+    }
+
+  def takeTurnsAndStop(turns: List[Turn], game: Quarto = Quarto()): Quarto =
+    turns.foldLeft(game) { (g, turn) =>
+      takeTurn(turn, g) match {
+        case Success(next) => next
+        case Failure(_)    => g
+      }
+    }
 
   def turnsEndResult(turns: List[Turn]): Option[GameEnd] =
     takeTurns(turns).fold(_ => None, q => Some(q)).flatMap {
@@ -53,7 +54,8 @@ object Util {
       .zipped
       .toList
       .flatMap { case (player: Player, t: Tile, p: Piece) =>
-        List(Pass(player, p), Place(switch(player), t)) }
+        List(Pass(player, p), Place(switch(player), t))
+      }
   }
 
   def wonWith(game: FinalQuarto): List[Line] =

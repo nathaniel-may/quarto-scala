@@ -58,7 +58,7 @@ object Arbitrarily {
       pass   <- arbBool.arbitrary
       raw    =  getTurns(tiles, pieces)
       turns  =  if (pass || raw.isEmpty) raw else raw.init
-    } yield takeTurnsAndStop(turns).get
+    } yield takeTurnsAndStop(turns)
 
     def nextTurns(q: Quarto): Stream[Turn] = {
       q match {
