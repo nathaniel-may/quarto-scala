@@ -7,9 +7,9 @@ import com.nathanielmay.quarto.Exceptions.{
   InvalidPlacementError,
   OutOfTurnError}
 
-case object Quarto{
-  val hLines: List[List[Tile]]  = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
-  val vLines: List[List[Tile]]  = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
+object Quarto{
+  val hLines: List[List[Tile]] = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
+  val vLines: List[List[Tile]] = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
   val dLines: List[List[Tile]] = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
                                       Board.indexes.zip(Board.indexes.reverse).map({case (h, v) => Tile(h, v)}))
   //TODO add squares variant
@@ -34,10 +34,13 @@ case object Quarto{
 /**
   * Parent class used for Quarto games. Child objects contain game representation and logic
   *
-  * @param board locations of all placed pieces
-  * @param active the piece to be placed next or None if one needs to be passed
+  * board - locations of all placed pieces
+  * active - the piece to be placed next or None if one needs to be passed
   */
-sealed abstract class Quarto (board: Board, active: Option[Piece])
+sealed trait Quarto {
+  val board: Board
+  val active: Option[Piece]
+}
 
 case object PassQuarto{
   def apply(board: Board): PassQuarto = new PassQuarto(board)
@@ -49,7 +52,8 @@ case object PassQuarto{
   *
   * @param board locations of all placed pieces
   */
-case class PassQuarto private (board: Board) extends Quarto(board, None){
+case class PassQuarto private (board: Board) extends Quarto {
+  val active = None
   val player: Player = if (board.size % 2 == 0) P1 else P2
 
   /**
@@ -93,7 +97,8 @@ case object PlaceQuarto{
   * @param board locations of all placed pieces
   * @param toPlace the piece that must be placed
   */
-case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto(board, Some(toPlace)){
+case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto {
+  val active = Some(toPlace)
   val player: Player = if (board.size % 2 == 0) P2 else P1
 
   /**
@@ -126,7 +131,8 @@ case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto(boa
   * @param board locations of all placed pieces
   * @param state denotes the winning player or a tie
   */
-case class FinalQuarto(board: Board, state: GameEnd) extends Quarto(board, None){
+case class FinalQuarto(board: Board, state: GameEnd) extends Quarto {
+  val active = None
   override def toString: String = s"$state!\n$board"
 }
 
