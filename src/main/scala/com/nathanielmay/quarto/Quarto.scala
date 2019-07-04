@@ -20,13 +20,15 @@ object Quarto{
   def apply(): PassQuarto = PassQuarto(Board())
 
   def isWon(board: Board): Boolean = {
-    def winningLine(board: Board, line: List[Tile]): Boolean = {
-      line.flatMap(piece => board.get(piece))
-        .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
-        piece.attrs.foldLeft(counts)((m, attr) =>
-          m.updated(attr, m.getOrElse(attr, 0) + 1)))
-        .exists(4 <= _._2)
-    }
+    def winningLine(board: Board, line: List[Tile]): Boolean =
+      line
+        .flatMap(board.get)
+        .flatMap(_.attrs)
+        .groupBy(identity)
+        .values
+        .map(_.size)
+        .exists(_ >= 4)
+
     allLines.exists(winningLine(board, _))
   }
 }
