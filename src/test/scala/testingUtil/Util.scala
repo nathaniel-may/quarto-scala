@@ -8,7 +8,7 @@ import com.nathanielmay.quarto._, Quarto.Line
 
 object Util {
 
-  def takeTurn(t: Turn, game: Quarto = Quarto()): Try[Quarto] =
+  def takeTurn(t: Turn, game: Quarto): Try[Quarto] =
     (game, t) match {
       case (passQ: PassQuarto, Pass(person, piece)) =>
         passQ.passPiece(person, piece)
@@ -22,13 +22,13 @@ object Util {
       case _                         => Failure(new Exception("cannot make this move on this kind of board"))
     }
 
-  def takeTurns(turns: List[Turn], game: Quarto = Quarto()): Try[Quarto] =
-    turns.foldLeft[Try[Quarto]](Success(game)) { (tryGame, turn) =>
+  def takeTurns(turns: List[Turn]): Try[Quarto] =
+    turns.foldLeft[Try[Quarto]](Success(Quarto.empty)) { (tryGame, turn) =>
       tryGame flatMap { takeTurn(turn, _) }
     }
 
-  def takeTurnsAndStop(turns: List[Turn], game: Quarto = Quarto()): Quarto =
-    turns.foldLeft(game) { (g, turn) =>
+  def takeTurnsAndStop(turns: List[Turn]): Quarto =
+    turns.foldLeft[Quarto](Quarto.empty) { (g, turn) =>
       takeTurn(turn, g) match {
         case Success(next) => next
         case Failure(_)    => g
@@ -75,7 +75,7 @@ object Util {
   def quartoFrom(board: Try[Board], forOpponent: Piece): Try[Quarto] =
     board.flatMap { b => PlaceQuarto(b, forOpponent) }
 
-  def expectError(e: Exception)(turns: List[Turn], game: Quarto = Quarto()): Boolean =
+  def expectError(e: Exception)(turns: List[Turn]): Boolean =
     takeTurns(turns).failed.get == e
 
   def assertResult(turns: List[Turn])(f: GameEnd => Boolean): Unit = {
