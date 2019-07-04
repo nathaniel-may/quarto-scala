@@ -1,8 +1,7 @@
 package com.nathanielmay.quarto
 
 // Scalacheck
-import org.scalacheck.Gen.oneOf
-import org.scalacheck.{Arbitrary, Properties}
+import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, exists, forAll}
 
 // Testing
