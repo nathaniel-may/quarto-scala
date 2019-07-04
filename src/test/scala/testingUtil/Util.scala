@@ -36,10 +36,12 @@ object Util {
     }
 
   def turnsEndResult(turns: List[Turn]): Option[GameEnd] =
-    takeTurns(turns).fold(_ => None, q => Some(q)).flatMap {
-      case FinalQuarto(_, state) => Some(state)
-      case _ => None
-    }
+    takeTurns(turns)
+      .fold(_ => None, q => Some(q))
+      .flatMap {
+        case FinalQuarto(_, state) => Some(state)
+        case _ => None
+      }
 
   private def switch(p: Player): Player = p match {
     case P1 => P2
@@ -68,10 +70,10 @@ object Util {
     }
 
   def quartoFrom(board: Try[Board]): Try[Quarto] =
-    board.flatMap(b => Success(PassQuarto(b)))
+    board.flatMap { b => Success(PassQuarto(b)) }
 
   def quartoFrom(board: Try[Board], forOpponent: Piece): Try[Quarto] =
-    board.flatMap(b => PlaceQuarto(b, forOpponent))
+    board.flatMap { b => PlaceQuarto(b, forOpponent) }
 
   def expectError(e: Exception)(turns: List[Turn], game: Quarto = Quarto()): Boolean =
     takeTurns(turns).failed.get == e
@@ -83,9 +85,11 @@ object Util {
     }
   }
 
-  def assertWin(turns: List[Turn]): Unit = assertResult(turns)(r => r == Winner(P1) || r == Winner(P2))
+  def assertWin(turns: List[Turn]): Unit =
+    assertResult(turns)(r => r == Winner(P1) || r == Winner(P2))
 
-  def assertTie(turns: List[Turn]): Unit = assertResult(turns)(_ == Tie)
+  def assertTie(turns: List[Turn]): Unit =
+    assertResult(turns)(_ == Tie)
 
 }
 
