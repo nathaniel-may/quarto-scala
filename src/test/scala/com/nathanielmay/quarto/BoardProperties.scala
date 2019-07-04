@@ -3,7 +3,7 @@ package com.nathanielmay.quarto
 //scalacheck
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll}
-import testingUtil.Arbitrarily.{aTile, aPiece}
+import testingUtil.Arbs._
 
 //project
 import com.nathanielmay.quarto.Exceptions.DuplicatePieceError

@@ -3,7 +3,7 @@ package com.nathanielmay.quarto
 //scalacheck
 import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, forAll}
-import testingUtil.Arbitrarily.{aPiece, aColor, aSize, aShape, aTop}
+import testingUtil.Arbs._
 
 object PieceProperties extends Properties("Piece"){
 

@@ -1,17 +1,19 @@
 package com.nathanielmay.quarto
 
 // Scalacheck
-import org.scalacheck.Properties
-import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
+import org.scalacheck.Gen.oneOf
+import org.scalacheck.{Arbitrary, Properties}
+import org.scalacheck.Prop.{BooleanOperators, exists, forAll}
 
 // Testing
 import testingUtil.{Pass, Place}
-import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile, Q3}
 import testingUtil.Util._
 
 // Project
 import Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 import Quarto.{Horizontal, Vertical, Diagonal}
+import testingUtil.Generators._
+import testingUtil.Arbs._
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -32,8 +34,8 @@ object QuartoProperties extends Properties("Quarto") {
   }
 
 
-  property("a game with less than 4 pieces cannot be won") = forAll {
-    q3: Q3 => q3.game match {
+  property("a game with less than 4 pieces cannot be won") = forAll(genGame(3)) {
+    game: Quarto => game match {
       case _: FinalQuarto => false
       case _              => true
     }
