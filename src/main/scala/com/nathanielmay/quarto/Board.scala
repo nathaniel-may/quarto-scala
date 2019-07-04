@@ -15,7 +15,7 @@ object Board {
     * @param tiles map identifying the spaces with pieces on them
     * @return board iff map contains a valid game state
     */
-  def apply(tiles: Map[Tile, Piece] = Map()): Try[Board] =
+  private[quarto] def apply(tiles: Map[Tile, Piece] = Map()): Try[Board] =
     if (noDuplicatePieces(tiles))
       Success(new Board(tiles))
     else
