@@ -8,7 +8,11 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class QuartoTest extends FlatSpec with Matchers {
 
-  "a Quarto game"  should "fail with active that is already placed" in {
+  "a Quarto game"  should "empty should equal apply()" in {
+    Quarto.empty shouldBe Quarto()
+  }
+
+  it  should "fail with active that is already placed" in {
     val tiles = Map(Tile(I1, I2) -> WLQF, Tile(I2, I2) -> BSRH)
     assert(PlaceQuarto(Board(tiles).get, WLQF).failed.get == InvalidPieceForOpponentError)
   }
