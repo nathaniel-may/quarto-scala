@@ -4,8 +4,7 @@ package testingUtil
 import scala.util.{Failure, Success, Try}
 
 // Project
-import com.nathanielmay.quarto.{Attribute, Board, Piece, Tile, Quarto, PassQuarto, PlaceQuarto, GameEnd, FinalQuarto, Winner, Tie, Player, P1, P2}
-import Quarto.{Line, Horizontal, Vertical, Diagonal}
+import com.nathanielmay.quarto._, Quarto.Line
 
 object Util {
 
@@ -48,11 +47,13 @@ object Util {
 
   def getTurns(tiles: List[Tile], pieces: List[Piece]): List[Turn] = {
     def playerSeq(n: Int): List[Player] =
-      List.tabulate(n)(i => if (i % 2 == 0) P1 else P2)
+      Stream.iterate[Player](P1)(switch).take(n).toList
 
     (playerSeq(tiles.size), tiles, pieces)
-      .zipped.toList
-      .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(switch(player), t))}
+      .zipped
+      .toList
+      .flatMap { case (player: Player, t: Tile, p: Piece) =>
+        List(Pass(player, p), Place(switch(player), t)) }
   }
 
   def wonWith(game: FinalQuarto): List[Line] =
@@ -60,7 +61,7 @@ object Util {
 
   def validQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
     forOpponent match {
-      case None => quartoFrom(board).isSuccess
+      case None    => quartoFrom(board).isSuccess
       case Some(p) => quartoFrom(board, p).isSuccess
     }
 
@@ -75,7 +76,7 @@ object Util {
 
   def assertResult(turns: List[Turn])(f: GameEnd => Boolean): Unit = {
     turnsEndResult(turns) match {
-      case None => assert(false)
+      case None      => assert(false)
       case Some(end) => assert(f(end))
     }
   }
