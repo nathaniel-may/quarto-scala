@@ -7,7 +7,7 @@ import com.nathanielmay.quarto.Exceptions.{
   InvalidPlacementError,
   OutOfTurnError}
 
-object Quarto{
+object Quarto {
   val hLines: List[List[Tile]] = Board.indexes.map(h => Board.indexes.map(v => Tile(h, v)))
   val vLines: List[List[Tile]] = Board.indexes.map(v => Board.indexes.map(h => Tile(h, v)))
   val dLines: List[List[Tile]] = List(Board.indexes.zip(Board.indexes).map({case (h, v) => Tile(h, v)}),
@@ -38,10 +38,9 @@ object Quarto{
   */
 sealed trait Quarto {
   val board: Board
-  val active: Option[Piece]
 }
 
-case object PassQuarto{
+object PassQuarto {
   def apply(board: Board): PassQuarto = new PassQuarto(board)
 }
 
@@ -52,7 +51,6 @@ case object PassQuarto{
   * @param board locations of all placed pieces
   */
 case class PassQuarto private (board: Board) extends Quarto {
-  val active = None
   val player: Player = if (board.size % 2 == 0) P1 else P2
 
   /**
@@ -74,7 +72,7 @@ case class PassQuarto private (board: Board) extends Quarto {
   override def toString: String = s"$player needs to hand a piece to opponent\n$board"
 }
 
-case object PlaceQuarto{
+object PlaceQuarto {
   /**
     * Smart constructor for Quarto game where the next step is to place a piece
     *
@@ -97,7 +95,6 @@ case object PlaceQuarto{
   * @param toPlace the piece that must be placed
   */
 case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto {
-  val active = Some(toPlace)
   val player: Player = if (board.size % 2 == 0) P2 else P1
 
   /**
@@ -131,7 +128,6 @@ case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto {
   * @param state denotes the winning player or a tie
   */
 case class FinalQuarto(board: Board, state: GameEnd) extends Quarto {
-  val active = None
   override def toString: String = s"$state!\n$board"
 }
 
