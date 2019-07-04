@@ -17,7 +17,9 @@ class QuartoTest extends FlatSpec with Matchers {
 
   it  should "fail with active that is already placed" in {
     val tiles = Map(Tile(I1, I2) -> WLQF, Tile(I2, I2) -> BSRH)
-    assert(PlaceQuarto(Board(tiles).get, WLQF).failed.get == InvalidPieceForOpponentError)
+    assert(Board(tiles)
+      .flatMap { PlaceQuarto(_, WLQF) }
+      .failed.get == InvalidPieceForOpponentError)
   }
 
   it should "should be valid without active piece if game is won" in {
@@ -44,8 +46,7 @@ class QuartoTest extends FlatSpec with Matchers {
 
     assert(q1.isSuccess)
     assert(q2.isSuccess)
-    assert(q1.get == q2.get)
-    assert(q1 == q2)
+    q1.get shouldBe q2.get
 
   }
 

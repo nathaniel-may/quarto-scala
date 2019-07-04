@@ -5,14 +5,15 @@ import org.scalacheck.Properties
 import org.scalacheck.Prop.{BooleanOperators, exists, forAll}
 
 // Testing
-import testingUtil.{Pass, Place}
-import testingUtil.Util._
+import scala.util.Success
 
 // Project
 import Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 import Quarto.{Horizontal, Vertical, Diagonal}
+import testingUtil.{Pass, Place}
 import testingUtil.Generators._
 import testingUtil.Arbs._
+import testingUtil.Util._
 
 object QuartoProperties extends Properties("Quarto") {
 
@@ -26,10 +27,10 @@ object QuartoProperties extends Properties("Quarto") {
 
   property("game played with turns and constructed from map are equal") = forAll {
     game: Quarto => (game match {
-      case PassQuarto(b)     => PassQuarto(b)
-      case PlaceQuarto(b, p) => PlaceQuarto(b, p).get
-      case FinalQuarto(b, s) => FinalQuarto(b, s)
-    }) == game
+      case PassQuarto(b)     => Success(PassQuarto(b))
+      case PlaceQuarto(b, p) => PlaceQuarto(b, p)
+      case FinalQuarto(b, s) => Success(FinalQuarto(b, s))
+    }) fold(_ => false, _ == game)
   }
 
 
