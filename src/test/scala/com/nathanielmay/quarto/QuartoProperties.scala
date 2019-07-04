@@ -7,10 +7,9 @@ import org.scalacheck.Prop.{BooleanOperators, forAll, exists}
 // Testing
 import testingUtil.{Pass, Place, Horizontal, Vertical, Diagonal}
 import testingUtil.Arbitrarily.{a3PieceGame, aGame, aCompletedGame, aPiece, aTile, Q3}
-import testingUtil.Util.{testableQuarto, wonWith}
+import testingUtil.Util._
 
 // Project
-import com.nathanielmay.quarto.Quarto.quarto
 import com.nathanielmay.quarto.Exceptions.{InvalidPieceForOpponentError, InvalidPlacementError, OutOfTurnError}
 
 
@@ -41,13 +40,13 @@ object QuartoProperties extends Properties("Quarto") {
   }
 
   property("player 2 cannot take the first turn") = forAll {
-    p: Piece => quarto.passPiece(P2, p)
+    p: Piece => Quarto.empty.passPiece(P2, p)
       .fold(_ == OutOfTurnError, _ => false)
   }
 
   property("player 1 cannot pass and place") = forAll {
     (t: Tile, p: Piece) => (for {
-      q1 <- quarto.passPiece(P1, p)
+      q1 <- Quarto.empty.passPiece(P1, p)
       q2 <- q1.placePiece(P1, t).map(_.merge)
     } yield q2).fold(_ == OutOfTurnError, _ => false)
   }
@@ -55,7 +54,7 @@ object QuartoProperties extends Properties("Quarto") {
   property("player 2 cannot pass and place") = forAll {
     (t1: Tile, t2: Tile, p1: Piece, p2: Piece) =>
       (t1 != t2 && p1 != p2) ==> {
-        quarto.takeTurns(List(
+        takeTurns(List(
           Pass (P1, p1),
           Place(P2, t1),
           Pass (P2, p2),
@@ -66,7 +65,7 @@ object QuartoProperties extends Properties("Quarto") {
 
   property("cannot place piece on an occupied tile") = forAll {
     (t: Tile, p1: Piece, p2: Piece) => (p1 != p2) ==>
-      quarto.takeTurns(List(
+      takeTurns(List(
         Pass (P1, p1),
         Place(P2, t),
         Pass (P2, p2),

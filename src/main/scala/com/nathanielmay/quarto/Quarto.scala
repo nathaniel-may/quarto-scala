@@ -15,9 +15,9 @@ object Quarto {
   //TODO add squares variant
   private val allLines: List[List[Tile]] = hLines ++ vLines ++ dLines
 
-  val quarto: PassQuarto = Quarto()
+  val empty: PassQuarto = PassQuarto(Board())
 
-  def apply(): PassQuarto = PassQuarto(Board())
+  def apply(): PassQuarto = empty
 
   def isWon(board: Board): Boolean =
     allLines.exists {

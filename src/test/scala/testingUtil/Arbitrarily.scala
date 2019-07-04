@@ -1,17 +1,19 @@
 package testingUtil
 
-// Scala check
+// Scalacheck
 import org.scalacheck.Arbitrary, Arbitrary.arbBool
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, oneOf, pick}
+
+// Scala
+import scala.util.{Try, Success, Failure}
 
 // Project
 import com.nathanielmay.quarto.{Quarto, FinalQuarto, PassQuarto, PlaceQuarto, Tile, Piece, Color, Shape, Size, Top}
 import com.nathanielmay.quarto.{White, Black, Round, Square, Large, Small, Flat, Hole}
 import com.nathanielmay.quarto.{I0, I1, I2, I3}
-import com.nathanielmay.quarto.Quarto.quarto
 import Pieces._
-import Util.{testableQuarto, getTurns}
+import Util._
 
 object Arbitrarily {
   import Generators._
@@ -56,27 +58,38 @@ object Arbitrarily {
       pass   <- arbBool.arbitrary
       raw    =  getTurns(tiles, pieces)
       turns  =  if (pass || raw.isEmpty) raw else raw.init
-    } yield quarto.takeTurnsAndStop(turns).get
+    } yield takeTurnsAndStop(turns).get
 
-    def nextTurns(q: Quarto): List[Turn] = {
+    def nextTurns(q: Quarto): Stream[Turn] = {
       q match {
         case passQ: PassQuarto =>
-          pieceList.filterNot(p => passQ.board.contains(p)).map(Pass(passQ.player, _))
+          pieceList.toStream
+            .filterNot(passQ.board.contains)
+            .map { Pass(passQ.player, _) }
         case placeQ: PlaceQuarto =>
-          tileList.filterNot(t => placeQ.board.contains(t)).map(Place(placeQ.player, _))
-        case _: FinalQuarto => List()
+          tileList.toStream
+            .filterNot(placeQ.board.contains)
+            .map { Place(placeQ.player, _) }
+        case _: FinalQuarto => Stream.empty
       }
     }
 
     val genFinalGame: Gen[FinalQuarto] = {
-      def go(gen: Gen[Quarto]): Gen[FinalQuarto] =
-        gen.flatMap(q => oneOf(nextTurns(q)).map(t => q.takeTurn(t).get))
-          .flatMap {
+      def go(game: Gen[Quarto]): Gen[FinalQuarto] =
+        game.flatMap { start =>
+          oneOf(nextTurns(start)
+            .map { takeTurn(_, start) }
+            .flatMap {
+              case Success(g) => Stream(g)
+              case Failure(_) => Stream.empty
+            }
+          ) flatMap {
             case end: FinalQuarto => end
-            case game: Quarto => go(game)
+            case g                => go(g)
           }
+        }
 
-      go(quarto)
+      go(Gen.const(Quarto.empty))
     }
 
   }
