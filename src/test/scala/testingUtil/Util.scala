@@ -58,21 +58,8 @@ object Util {
       .flatMap{case (player: Player, t: Tile, p: Piece) => List(Pass(player, p), Place(player.switch, t))}
   }
 
-  def wonWith(game: FinalQuarto): List[Line] = {
-
-    def wins(line: List[Tile]): Boolean =
-      line.flatMap(piece => game.board.get(piece))
-        .foldLeft[Map[Attribute, Int]](Map())((counts, piece) =>
-        piece.attrs.foldLeft(counts)((m, attr) =>
-          m.updated(attr, m.getOrElse(attr, 0) + 1)))
-        .exists(4 <= _._2)
-
-    for {
-      d   <- Diagonal.lines.filter(wins).map { _ => Diagonal }
-      dh  <- d :: Horizontal.lines.filter(wins).map { _ => Horizontal }
-      dhv <- dh :: Vertical.lines.filter(wins).map { _ => Vertical }
-    } yield dhv
-  }
+  def wonWith(game: FinalQuarto): List[Line] =
+    Quarto.wonBy(game.board) map { _._2 }
 
   def validQuarto(board: Try[Board], forOpponent: Option[Piece]): Boolean =
     forOpponent match {
