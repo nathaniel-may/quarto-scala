@@ -30,7 +30,8 @@ class QuartoTest extends FlatSpec with Matchers {
 
     val tiles = Map(
       Tile(I1, I2) -> Piece(White, Large, Square, Flat),
-      Tile(I2, I2) -> Piece(Black, Large, Square, Flat))
+      Tile(I2, I2) -> Piece(Black, Large, Square, Flat)
+    )
 
     val q2 = quartoFrom(Board(tiles))
 
@@ -117,9 +118,9 @@ class QuartoTest extends FlatSpec with Matchers {
       .getOrElse(fail())
       .placePiece(P2, Tile(I1, I2))
       .getOrElse(fail()) match {
-      case Right(FinalQuarto(_, _)) => fail()
-      case _ =>
-    }
+        case Right(FinalQuarto(_, _)) => fail()
+        case _ =>
+      }
   }
 
   "a Turn" should "fail when giving opponent a piece that is already placed" in {
