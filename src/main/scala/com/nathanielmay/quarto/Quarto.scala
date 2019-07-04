@@ -139,12 +139,11 @@ case class FinalQuarto(board: Board, state: GameEnd) extends Quarto {
 /**
   * singleton objects representing player 1 and player 2
   *
-  * @constructor only to be used here for P1 and P2 objects
-  * @param num Int used for logic and strings for players
+  * num - Int used for logic and strings for players
   */
-sealed abstract class Player(val num: Int)
-case object P1 extends Player(1)
-case object P2 extends Player(2)
+sealed trait Player { val num: Int }
+case object P1 extends Player { val num = 1 }
+case object P2 extends Player { val num = 2 }
 
 /**
   * Sum type to denote winners and tie games
