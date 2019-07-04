@@ -108,14 +108,12 @@ case class PlaceQuarto private (board: Board, toPlace: Piece) extends Quarto {
   def placePiece(person: Player, tile: Tile): Try[Either[PassQuarto, FinalQuarto]] =
     if (person != player)
       Failure(OutOfTurnError)
-    else if (board.contains(tile))
-      Failure(InvalidPlacementError)
     else
-      Board(board.tiles + (tile -> toPlace))
-        .flatMap { board =>
-          if      (Quarto.isWon(board)) Success(Right(FinalQuarto(board, Winner(person))))
-          else if (board.isFull)        Success(Right(FinalQuarto(board, Tie)))
-          else                          Success(Left(PassQuarto(board))) }
+      board.place(toPlace, tile) map { board =>
+        if      (Quarto.isWon(board)) Right(FinalQuarto(board, Winner(person)))
+        else if (board.isFull)        Right(FinalQuarto(board, Tie))
+        else                          Left(PassQuarto(board))
+      }
 
   override def toString: String = s"$player needs to place $toPlace on\n$board"
 }

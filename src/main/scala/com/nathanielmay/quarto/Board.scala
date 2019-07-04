@@ -1,9 +1,10 @@
 package com.nathanielmay.quarto
 
-import com.nathanielmay.quarto.Exceptions.DuplicatePieceError
+import com.nathanielmay.quarto.Exceptions.{DuplicatePieceError, InvalidPlacementError}
+
 import scala.util.{Failure, Success, Try}
 
-object Board{
+object Board {
   val indexes: List[Index] = List(I0, I1, I2, I3)
 
   def apply(): Board = new Board(Map())
@@ -33,9 +34,18 @@ object Board{
 sealed case class Board private (tiles: Map[Tile, Piece]) {
   def isFull: Boolean = tiles.size >= 16
   def size: Int = tiles.size
-  def contains(sq: Tile): Boolean = tiles.contains(sq)
+  def contains(t: Tile): Boolean = tiles.contains(t)
   def contains(p: Piece): Boolean = tiles.valuesIterator.contains(p)
-  def get(sq: Tile): Option[Piece] = tiles.get(sq)
+  def get(t: Tile): Option[Piece] = tiles.get(t)
+
+  def place(p: Piece, t: Tile): Try[Board] =
+    if (contains(p))
+      Failure(DuplicatePieceError)
+    else if (contains(t))
+      Failure(InvalidPlacementError)
+    else
+      Board(tiles + (t -> p))
+
 
   override def toString: String = {
     Board.indexes.map(h =>
